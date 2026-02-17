@@ -296,8 +296,6 @@ export class MarketStall {
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Sell to ${customer.name} the ${customer.type}, wants ${customer.desiredCategory}`);
 
-    const hasItems = gameState.inventory.length > 0;
-
     card.innerHTML = `
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
@@ -307,15 +305,13 @@ export class MarketStall {
           <div class="patience-bar__fill" style="height: 100%; background: var(--gold-dim); border-radius: 2px; transition: width 1s linear; width: 100%;"></div>
         </div>
       </div>
-      ${hasItems ? '<div style="color: var(--gold-dim); font-size: 0.8rem; align-self: center;">Sell ➜</div>' : ''}
+      <div style="color: var(--gold-dim); font-size: 0.8rem; align-self: center;">Sell ➜</div>
     `;
 
-    if (hasItems) {
-      card.style.cursor = 'pointer';
-      card.addEventListener('click', () => {
-        this.startSale(customer);
-      });
-    }
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      this.startSale(customer);
+    });
 
     card.addEventListener('mouseenter', () => {
       showTooltip(card, `
@@ -483,9 +479,22 @@ export class MarketStall {
   }
 
   private startSale(customer: Customer): void {
-    if (gameState.inventory.length === 0) return;
-
     this.showOverlay();
+
+    if (gameState.inventory.length === 0) {
+      this.minigameContainer.innerHTML = `
+        <div style="text-align: center; padding: 24px;">
+          <p style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem; margin-bottom: 16px;">
+            ${customer.icon} ${customer.name} is browsing...
+          </p>
+          <p style="color: var(--ink-dim); margin-bottom: 20px;">You have no items to sell! Buy or craft some goods first.</p>
+          <button class="btn btn-gold close-btn">Back to Market</button>
+        </div>
+      `;
+      this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => this.hideOverlay());
+      return;
+    }
+
     this.minigameContainer.innerHTML = `
       <h2 class="minigame-container__title">Select an item to sell to ${customer.icon} ${customer.name}</h2>
       <div class="goods-grid" id="sale-items"></div>

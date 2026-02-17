@@ -45,35 +45,7 @@ export class HaggleGame implements Minigame {
     }
 
     this.phase = 'player-turn';
-    this.renderCustomerReveal();
-  }
-
-  private renderCustomerReveal(): void {
-    if (!this.container) return;
-    this.container.innerHTML = '';
-
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'text-align: center; padding: 16px;';
-
-    wrapper.innerHTML = `
-      <p style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem; margin-bottom: 16px;">
-        ${this.customer.icon} ${this.customer.name} rolls the haggle die...
-      </p>
-
-      <div style="margin-bottom: 24px;">
-        <div style="font-size: 3rem; background: var(--parchment-light); border: 3px solid var(--accent); border-radius: 12px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-family: var(--font-display); color: var(--accent-bright);">
-          ${this.customerRoll}
-        </div>
-        <p style="color: var(--ink-dim); font-size: 0.85rem; margin-top: 8px;">Customer rolled a d20</p>
-      </div>
-
-      <p style="color: var(--ink); margin-bottom: 16px;">
-        Roll d6's to beat <strong style="color: var(--accent-bright);">${this.customerRoll}</strong>. But if you roll a <strong style="color: var(--accent-bright);">1</strong>, you bust!
-      </p>
-    `;
-
-    this.container.appendChild(wrapper);
-    setTimeout(() => this.renderPlayerTurn(), 1500);
+    this.renderPlayerTurn();
   }
 
   private renderPlayerTurn(): void {
