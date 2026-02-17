@@ -70,12 +70,10 @@ export class HaggleGame implements Minigame {
       <p style="color: var(--ink); margin-bottom: 16px;">
         Roll d6's to beat <strong style="color: var(--accent-bright);">${this.customerRoll}</strong>. But if you roll a <strong style="color: var(--accent-bright);">1</strong>, you bust!
       </p>
-
-      <button class="btn btn-gold start-btn">Start Rolling!</button>
     `;
 
     this.container.appendChild(wrapper);
-    wrapper.querySelector('.start-btn')!.addEventListener('click', () => this.renderPlayerTurn());
+    setTimeout(() => this.renderPlayerTurn(), 1500);
   }
 
   private renderPlayerTurn(): void {

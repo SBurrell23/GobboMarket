@@ -30,9 +30,13 @@ export function calculateSellPrice(
   const workbenchBonus = (goods?.craftable && gameState.hasUpgrade('sturdy_workbench')) ? 1.10 : 1.0;
   // Grand Emporium: +15% on all goods
   const emporiumBonus = gameState.hasUpgrade('grand_emporium') ? 1.15 : 1.0;
+  // Golden Scales: +10% on all goods
+  const scalesBonus = gameState.hasUpgrade('golden_scales') ? 1.10 : 1.0;
+  // Merchant Legend: 2x all sale prices
+  const legendBonus = gameState.hasUpgrade('merchant_legend') ? 2.0 : 1.0;
 
   const finalPrice = Math.round(
-    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus * emporiumBonus
+    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus * emporiumBonus * scalesBonus * legendBonus
   );
 
   return {
@@ -48,7 +52,7 @@ export function calculateSellPrice(
 export function calculateBuyPrice(goodsId: string, tier: number): number {
   const goods = getGoodsById(goodsId);
   if (!goods) return 0;
-  const tierDiscount = 1 - tier * 0.05;
+  const tierDiscount = 1 - tier * 0.03;
   const guildDiscount = gameState.hasUpgrade('merchant_guild') ? 0.90 : 1.0;
   return Math.max(1, Math.round(goods.materialCost * tierDiscount * guildDiscount));
 }

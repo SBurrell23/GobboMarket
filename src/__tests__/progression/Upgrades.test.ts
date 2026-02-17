@@ -46,6 +46,6 @@ describe('Upgrades', () => {
 
   it('should have upgrades for all tiers', () => {
     const tiers = new Set(UPGRADES.map(u => u.tier));
-    expect(tiers.size).toBeGreaterThanOrEqual(4);
+    expect(tiers.size).toBeGreaterThanOrEqual(7);
   });
 });

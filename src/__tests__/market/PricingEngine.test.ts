@@ -98,8 +98,8 @@ describe('PricingEngine', () => {
 
     it('should apply tier discount', () => {
       const tier0 = calculateBuyPrice('iron_dagger', 0);
-      const tier2 = calculateBuyPrice('iron_dagger', 2);
-      expect(tier2).toBeLessThan(tier0);
+      const tier5 = calculateBuyPrice('iron_dagger', 5);
+      expect(tier5).toBeLessThan(tier0);
     });
 
     it('should return 0 for unknown goods', () => {

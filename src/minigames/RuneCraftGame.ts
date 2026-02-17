@@ -177,6 +177,14 @@ export class RuneCraftGame implements Minigame {
       playerGrid.appendChild(playerCell);
     }
 
+    // Finish Early button
+    const finishBtn = document.createElement('button');
+    finishBtn.className = 'btn btn-subtle';
+    finishBtn.style.cssText = 'display: block; margin: 16px auto 0; font-size: 0.9rem;';
+    finishBtn.textContent = `Finish Early (${matchCount}/9 correct)`;
+    finishBtn.addEventListener('click', () => this.finishGame(false));
+    wrapper.appendChild(finishBtn);
+
     this.container.appendChild(wrapper);
   }
 

@@ -74,7 +74,7 @@ describe('GameFlow Integration', () => {
       gameState.addReputation(50);
 
       expect(gameState.currentTier).toBe(1);
-      expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Market Square' });
+      expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
     });
 
     it('should not unlock tier with only coins', () => {

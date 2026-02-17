@@ -48,8 +48,8 @@ describe('Goods', () => {
     }
   });
 
-  it('should have goods for all 5 tiers', () => {
-    for (let tier = 0; tier <= 4; tier++) {
+  it('should have goods for all 9 tiers', () => {
+    for (let tier = 0; tier <= 8; tier++) {
       const goods = getAllGoods().filter(g => g.tier === tier);
       expect(goods.length).toBeGreaterThan(0);
     }

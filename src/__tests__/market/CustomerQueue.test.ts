@@ -31,9 +31,9 @@ describe('Customer', () => {
     expect(tier0).not.toContain('noble');
     expect(tier0).not.toContain('wizard');
 
-    const tier4 = getAvailableCustomerTypes(4);
-    expect(tier4).toContain('wizard');
-    expect(tier4.length).toBe(CUSTOMER_TYPES.length);
+    const tier8 = getAvailableCustomerTypes(8);
+    expect(tier8).toContain('wizard');
+    expect(tier8.length).toBe(CUSTOMER_TYPES.length);
   });
 
   it('should set budget multiplier based on type', () => {

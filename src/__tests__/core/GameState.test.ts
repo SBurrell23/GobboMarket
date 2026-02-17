@@ -93,7 +93,7 @@ describe('GameState', () => {
       state.addReputation(50);
 
       expect(state.currentTier).toBe(1);
-      expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Market Square' });
+      expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
     });
 
     it('should not unlock tier with only coins', () => {

@@ -56,7 +56,8 @@ export class AppraisalGame implements Minigame {
   }
 
   generateCards(): void {
-    const pairCount = 4 + Math.min(this.tier, 4);
+    const reduction = gameState.hasUpgrade('master_appraiser') ? 2 : 0;
+    const pairCount = Math.max(3, 4 + Math.min(this.tier, 4) - reduction);
     this.totalPairs = pairCount;
 
     // Pick random icons

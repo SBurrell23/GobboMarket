@@ -364,12 +364,14 @@ export class MarketStall {
       forge.destroy();
       eventBus.emit('minigame:completed', { type: 'forge', score: result.score });
 
+      // Arcane Anvil: 25% chance forged items start enchanted
+      const arcaneProc = gameState.hasUpgrade('arcane_anvil') && Math.random() < 0.25;
       const item: InventoryItem = {
         id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         goodsId: goods.id,
         quality: result.quality,
-        enchanted: false,
-        enchantMultiplier: 1,
+        enchanted: arcaneProc,
+        enchantMultiplier: arcaneProc ? 1.3 : 1,
         basePrice: goods.basePrice,
       };
 
@@ -447,21 +449,8 @@ export class MarketStall {
       };
 
       gameState.addToInventory(item);
-
-      this.minigameContainer.innerHTML = `
-        <div style="text-align: center; padding: 24px;">
-          <div style="font-size: 3rem; margin-bottom: 12px;">${goods.icon}</div>
-          <h2 style="margin-bottom: 8px;">Item Acquired!</h2>
-          <p style="color: var(--ink); margin-bottom: 20px;">${QUALITY_LABELS[result.quality]} ${goods.name}</p>
-          <button class="btn btn-gold close-btn">Back to Market</button>
-        </div>
-      `;
-
-      this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => {
-        this.hideOverlay();
-        this.render();
-      });
-
+      this.hideOverlay();
+      this.render();
       checkMilestones();
     };
 
@@ -486,21 +475,8 @@ export class MarketStall {
         eventBus.emit('inventory:changed', {});
       }
 
-      this.minigameContainer.innerHTML = `
-        <div style="text-align: center; padding: 24px;">
-          <div style="font-size: 3rem; margin-bottom: 12px;">${goods?.icon ?? '✨'}</div>
-          <h2 style="margin-bottom: 8px;">${result.multiplier > 1.2 ? 'Enchantment Success!' : 'Partial Enchantment'}</h2>
-          <p style="color: var(--blue-bright); font-size: 1.1rem; margin-bottom: 20px;">
-            Multiplier: x${result.multiplier.toFixed(2)}
-          </p>
-          <button class="btn btn-gold close-btn">Back to Market</button>
-        </div>
-      `;
-
-      this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => {
-        this.hideOverlay();
-        this.render();
-      });
+      this.hideOverlay();
+      this.render();
     };
 
     rune.start(this.minigameContainer.querySelector('#runecraft-area')!);
@@ -555,7 +531,6 @@ export class MarketStall {
   private doHaggle(customer: Customer, item: InventoryItem): void {
     eventBus.emit('minigame:started', { type: 'haggle' });
 
-    const goods = getGoodsById(item.goodsId);
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">🎲 Haggling with ${customer.icon} ${customer.name}</h2><div id="haggle-area"></div>`;
 
     const haggle = new HaggleGame(customer);
@@ -576,26 +551,10 @@ export class MarketStall {
       eventBus.emit('item:sold', { itemId: item.id, price: priceCalc.finalPrice, customerId: customer.id });
       eventBus.emit('customer:left', { customerId: customer.id, satisfied: true });
 
-      this.minigameContainer.innerHTML = `
-        <div style="text-align: center; padding: 24px;">
-          <div style="font-size: 3rem; margin-bottom: 12px;">${goods?.icon ?? '🪙'}</div>
-          <h2 style="margin-bottom: 8px;">Sold!</h2>
-          <p style="color: var(--gold); font-size: 1.5rem; font-family: var(--font-display); margin-bottom: 4px;">
-            +${priceCalc.finalPrice} 🪙
-          </p>
-          <p style="color: var(--ink-dim); margin-bottom: 20px;">
-            ${won ? 'Great deal!' : 'Could have been better...'} Multiplier: x${result.multiplier.toFixed(2)}
-          </p>
-          <button class="btn btn-gold close-btn">Back to Market</button>
-        </div>
-      `;
-
-      this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => {
-        this.hideOverlay();
-        this.render();
-        this.showSaleToast(priceCalc.finalPrice);
-        this.showNewMilestones();
-      });
+      this.hideOverlay();
+      this.render();
+      this.showSaleToast(priceCalc.finalPrice);
+      this.showNewMilestones();
     };
 
     haggle.start(this.minigameContainer.querySelector('#haggle-area')!);

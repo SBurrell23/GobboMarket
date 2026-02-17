@@ -119,6 +119,7 @@ export const UPGRADES: UpgradeDefinition[] = [
     effect: () => gameState.addUpgrade('apprentice_helper'),
     icon: '🧑‍🤝‍🧑',
   },
+  // Tier 2 upgrades
   {
     id: 'merchant_guild',
     name: 'Merchant Guild Card',
@@ -128,41 +129,83 @@ export const UPGRADES: UpgradeDefinition[] = [
     effect: () => gameState.addUpgrade('merchant_guild'),
     icon: '📜',
   },
+  // Tier 3 upgrades
   {
     id: 'enchant_table',
     name: 'Enchanting Table',
     description: 'Increases enchantment multiplier bonus by 20%.',
-    cost: 2000,
-    tier: 2,
+    cost: 2500,
+    tier: 3,
     effect: () => gameState.addUpgrade('enchant_table'),
     icon: '✨',
   },
-  {
-    id: 'royal_charter',
-    name: 'Royal Charter',
-    description: 'Nobles visit more frequently and pay 20% more.',
-    cost: 10000,
-    tier: 3,
-    effect: () => gameState.addUpgrade('royal_charter'),
-    icon: '📋',
-  },
+  // Tier 4 upgrades
   {
     id: 'master_forge',
     name: 'Master Forge',
     description: 'Wider sweet spot in forge minigame.',
-    cost: 5000,
-    tier: 3,
+    cost: 6000,
+    tier: 4,
     effect: () => gameState.addUpgrade('master_forge'),
     icon: '⚒️',
   },
+  // Tier 5 upgrades
+  {
+    id: 'royal_charter',
+    name: 'Royal Charter',
+    description: 'Nobles visit more frequently and pay 20% more.',
+    cost: 15000,
+    tier: 5,
+    effect: () => gameState.addUpgrade('royal_charter'),
+    icon: '📋',
+  },
+  {
+    id: 'master_appraiser',
+    name: 'Master Appraiser',
+    description: 'Memory match starts with 2 fewer pairs.',
+    cost: 12000,
+    tier: 5,
+    effect: () => gameState.addUpgrade('master_appraiser'),
+    icon: '🧐',
+  },
+  // Tier 6 upgrades
   {
     id: 'grand_emporium',
     name: 'Grand Emporium',
     description: 'All goods sell for 15% more.',
     cost: 50000,
-    tier: 4,
+    tier: 6,
     effect: () => gameState.addUpgrade('grand_emporium'),
     icon: '🏛️',
+  },
+  {
+    id: 'golden_scales',
+    name: 'Golden Scales',
+    description: 'Customers pay 10% more for all goods.',
+    cost: 60000,
+    tier: 6,
+    effect: () => gameState.addUpgrade('golden_scales'),
+    icon: '⚖️',
+  },
+  // Tier 7 upgrades
+  {
+    id: 'arcane_anvil',
+    name: 'Arcane Anvil',
+    description: 'Forged items have a chance of starting enchanted.',
+    cost: 200000,
+    tier: 7,
+    effect: () => gameState.addUpgrade('arcane_anvil'),
+    icon: '🔮',
+  },
+  // Tier 8 upgrades
+  {
+    id: 'merchant_legend',
+    name: 'Merchant Legend',
+    description: 'All sale prices doubled. The ultimate upgrade.',
+    cost: 400000,
+    tier: 8,
+    effect: () => gameState.addUpgrade('merchant_legend'),
+    icon: '🌟',
   },
 ];
 
