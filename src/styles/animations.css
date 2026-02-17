@@ -1,0 +1,142 @@
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes coinBurst {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes goldGlow {
+  0% { text-shadow: 0 0 4px rgba(212, 168, 67, 0.3); }
+  50% { text-shadow: 0 0 12px rgba(212, 168, 67, 0.6); }
+  100% { text-shadow: 0 0 4px rgba(212, 168, 67, 0.3); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+.anim-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.anim-slide-up {
+  animation: slideUp 0.4s ease forwards;
+}
+
+.anim-coin-burst {
+  animation: coinBurst 0.3s ease;
+}
+
+.anim-gold-glow {
+  animation: goldGlow 2s ease-in-out infinite;
+}
+
+.anim-shake {
+  animation: shake 0.3s ease;
+}
+
+.coin-particle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 0.9rem;
+  color: var(--gold-bright);
+  font-family: var(--font-display);
+  animation: floatUp 1s ease-out forwards;
+}
+
+/* Sale notification toast */
+@keyframes toastIn {
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+.sale-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-dark);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-md);
+  padding: 10px 24px;
+  color: var(--gold-bright);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  z-index: 250;
+  pointer-events: none;
+  animation: toastIn 2s ease forwards;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+/* Glow pulse for enchanted items */
+@keyframes enchantPulse {
+  0% { box-shadow: 0 0 4px rgba(90, 138, 171, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(90, 138, 171, 0.5); }
+  100% { box-shadow: 0 0 4px rgba(90, 138, 171, 0.2); }
+}
+
+.goods-card--enchanted {
+  animation: enchantPulse 2.5s ease-in-out infinite;
+  border-color: var(--blue) !important;
+}
+
+/* Staggered entrance for grid children */
+.goods-grid > * {
+  animation: slideUp 0.3s ease backwards;
+}
+.goods-grid > *:nth-child(1) { animation-delay: 0s; }
+.goods-grid > *:nth-child(2) { animation-delay: 0.05s; }
+.goods-grid > *:nth-child(3) { animation-delay: 0.1s; }
+.goods-grid > *:nth-child(4) { animation-delay: 0.15s; }
+.goods-grid > *:nth-child(5) { animation-delay: 0.2s; }
+.goods-grid > *:nth-child(6) { animation-delay: 0.25s; }
+
+/* Customer card enter animation */
+.customer-queue > * {
+  animation: slideUp 0.3s ease backwards;
+}
+.customer-queue > *:nth-child(1) { animation-delay: 0s; }
+.customer-queue > *:nth-child(2) { animation-delay: 0.08s; }
+.customer-queue > *:nth-child(3) { animation-delay: 0.16s; }
+.customer-queue > *:nth-child(4) { animation-delay: 0.24s; }
+.customer-queue > *:nth-child(5) { animation-delay: 0.32s; }
+
+/* Progress bar animation */
+@keyframes progressGlow {
+  0% { box-shadow: none; }
+  50% { box-shadow: 0 0 6px currentColor; }
+  100% { box-shadow: none; }
+}

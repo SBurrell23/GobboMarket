@@ -1,0 +1,56 @@
+import { gameState } from '../core/GameState.js';
+
+export interface RecipeDefinition {
+  id: string;
+  name: string;
+  goodsId: string;
+  cost: number;
+  tier: number;
+}
+
+export const RECIPES: RecipeDefinition[] = [
+  // Tier 0 - default unlocked
+  { id: 'iron_dagger', name: 'Iron Dagger', goodsId: 'iron_dagger', cost: 0, tier: 0 },
+  { id: 'wooden_shield', name: 'Wooden Shield', goodsId: 'wooden_shield', cost: 0, tier: 0 },
+  { id: 'herb_pouch', name: 'Herb Pouch', goodsId: 'herb_pouch', cost: 0, tier: 0 },
+
+  // Tier 1 - purchasable
+  { id: 'steel_sword', name: 'Steel Sword', goodsId: 'steel_sword', cost: 100, tier: 1 },
+  { id: 'chainmail', name: 'Chainmail Shirt', goodsId: 'chainmail', cost: 120, tier: 1 },
+  { id: 'healing_potion', name: 'Healing Potion', goodsId: 'healing_potion', cost: 80, tier: 1 },
+
+  // Tier 2
+  { id: 'elven_bow', name: 'Elven Bow', goodsId: 'elven_bow', cost: 500, tier: 2 },
+  { id: 'plate_armor', name: 'Plate Armor', goodsId: 'plate_armor', cost: 600, tier: 2 },
+  { id: 'mana_elixir', name: 'Mana Elixir', goodsId: 'mana_elixir', cost: 400, tier: 2 },
+
+  // Tier 3
+  { id: 'mithril_blade', name: 'Mithril Blade', goodsId: 'mithril_blade', cost: 2000, tier: 3 },
+  { id: 'dragon_scale_mail', name: 'Dragon Scale Mail', goodsId: 'dragon_scale_mail', cost: 2500, tier: 3 },
+  { id: 'phoenix_tears', name: 'Phoenix Tears', goodsId: 'phoenix_tears', cost: 1500, tier: 3 },
+
+  // Tier 4
+  { id: 'vorpal_sword', name: 'Vorpal Sword', goodsId: 'vorpal_sword', cost: 10000, tier: 4 },
+  { id: 'adamantine_plate', name: 'Adamantine Plate', goodsId: 'adamantine_plate', cost: 12000, tier: 4 },
+  { id: 'elixir_of_life', name: 'Elixir of Life', goodsId: 'elixir_of_life', cost: 8000, tier: 4 },
+];
+
+export function getAvailableRecipes(): RecipeDefinition[] {
+  return RECIPES.filter(r =>
+    r.tier <= gameState.currentTier && !gameState.hasRecipe(r.id)
+  );
+}
+
+export function purchaseRecipe(recipeId: string): boolean {
+  const recipe = RECIPES.find(r => r.id === recipeId);
+  if (!recipe) return false;
+  if (gameState.hasRecipe(recipeId)) return false;
+  if (recipe.cost > 0 && !gameState.spendCoins(recipe.cost, `Recipe: ${recipe.name}`)) return false;
+
+  gameState.unlockRecipe(recipeId);
+  return true;
+}
+
+export function getUnlockedRecipeIds(): string[] {
+  return RECIPES.filter(r => gameState.hasRecipe(r.id)).map(r => r.goodsId);
+}
