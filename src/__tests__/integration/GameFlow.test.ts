@@ -55,7 +55,7 @@ describe('GameFlow Integration', () => {
       const removed = gameState.removeFromInventory(item.id);
       expect(removed).not.toBeNull();
       gameState.recordSale();
-      awardReputation(item.quality, false);
+      awardReputation(item.quality, false, 'human');
 
       // 4. Verify coins increased
       expect(gameState.coins).toBeGreaterThan(initialCoins);
@@ -64,17 +64,19 @@ describe('GameFlow Integration', () => {
   });
 
   describe('Progression flow', () => {
-    it('should advance tier when coins and reputation meet thresholds', () => {
+    it('should advance tier when coins and race reputation meet thresholds', () => {
       expect(gameState.currentTier).toBe(0);
 
-      // Tier 1 requires: 150 coins, 15 reputation
+      // Tier 1 requires: 150 coins, goblin: 50, human: 50
       gameState.addCoins(200, 'test');
-      expect(gameState.currentTier).toBe(0); // Not yet - need reputation
+      expect(gameState.currentTier).toBe(0);
 
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      gameState.addReputation(20);
+      gameState.addRaceReputation('goblin', 50);
+      expect(gameState.currentTier).toBe(0); // Still need human rep
+      gameState.addRaceReputation('human', 50);
 
       expect(gameState.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
@@ -86,7 +88,8 @@ describe('GameFlow Integration', () => {
     });
 
     it('should not unlock tier with only reputation', () => {
-      gameState.addReputation(50);
+      gameState.addRaceReputation('goblin', 100);
+      gameState.addRaceReputation('human', 100);
       expect(gameState.currentTier).toBe(0);
     });
   });
@@ -132,7 +135,8 @@ describe('GameFlow Integration', () => {
 
       // Modify game state
       gameState.addCoins(500, 'test');
-      gameState.addReputation(75);
+      gameState.addRaceReputation('goblin', 50);
+      gameState.addRaceReputation('human', 25);
       gameState.addUpgrade('forge_bellows');
       gameState.addToInventory({
         id: 'saved-item',
@@ -166,6 +170,8 @@ describe('GameFlow Integration', () => {
       // Verify state restored
       expect(gameState.coins).toBe(savedCoins);
       expect(gameState.reputation).toBe(savedReputation);
+      expect(gameState.getRaceReputation('goblin')).toBe(50);
+      expect(gameState.getRaceReputation('human')).toBe(25);
       expect(gameState.hasUpgrade('forge_bellows')).toBe(true);
       expect(gameState.data.upgrades).toEqual(savedUpgrades);
       expect(gameState.inventory).toHaveLength(savedInventoryLength);
@@ -175,8 +181,10 @@ describe('GameFlow Integration', () => {
   describe('Upgrade purchase flow', () => {
     it('should buy upgrade, record it, and deduct coins', () => {
       // Need tier 1 for forge_bellows (cost 150)
+      // T1 requires: goblin: 50, human: 50
       gameState.addCoins(600, 'test');
-      gameState.addReputation(50); // Unlocks tier 1
+      gameState.addRaceReputation('goblin', 50);
+      gameState.addRaceReputation('human', 50);
 
       const coinsBefore = gameState.coins;
       expect(gameState.hasUpgrade('forge_bellows')).toBe(false);
@@ -189,9 +197,9 @@ describe('GameFlow Integration', () => {
     });
 
     it('should fail to purchase upgrade without enough coins', () => {
-      // Start with 50, add 50 = 100 total; forge_bellows costs 150
       gameState.addCoins(50, 'test');
-      gameState.addReputation(50);
+      gameState.addRaceReputation('goblin', 50);
+      gameState.addRaceReputation('human', 50);
 
       const success = purchaseUpgrade('forge_bellows');
       expect(success).toBe(false);
@@ -201,7 +209,8 @@ describe('GameFlow Integration', () => {
 
     it('should fail to purchase same upgrade twice', () => {
       gameState.addCoins(400, 'test');
-      gameState.addReputation(50);
+      gameState.addRaceReputation('goblin', 50);
+      gameState.addRaceReputation('human', 50);
 
       const first = purchaseUpgrade('forge_bellows');
       const second = purchaseUpgrade('forge_bellows');

@@ -52,6 +52,7 @@
   gap: var(--spacing-lg);
   height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .market-layout__sidebar {
@@ -59,6 +60,8 @@
   flex-direction: column;
   gap: var(--spacing-md);
   overflow-y: auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .market-layout__center {
@@ -66,6 +69,8 @@
   flex-direction: column;
   gap: var(--spacing-md);
   overflow-y: auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .game-nav {
@@ -147,13 +152,13 @@
 
 .goods-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--spacing-xs);
 }
 
 .goods-card {
   position: relative;
-  padding: var(--spacing-sm);
+  padding: 6px;
   background: var(--parchment-light);
   border: 1px solid var(--parchment-lighter);
   border-radius: var(--radius-sm);
@@ -169,24 +174,24 @@
 }
 
 .goods-card__icon {
-  font-size: 2rem;
-  margin-bottom: var(--spacing-xs);
+  font-size: 1.7rem;
+  margin-bottom: 2px;
 }
 
 .goods-card__name {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--gold);
 }
 
 .goods-card__price {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--ink-dim);
 }
 
 .goods-card__quality {
-  font-size: 0.75rem;
-  margin-top: var(--spacing-xs);
+  font-size: 0.68rem;
+  margin-top: 2px;
 }
 
 .minigame-overlay {

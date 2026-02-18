@@ -16,7 +16,8 @@ describe('SaveSystem', () => {
 
   it('should save and load game state', () => {
     gameState.addCoins(200, 'test');
-    gameState.addReputation(25);
+    gameState.addRaceReputation('goblin', 15);
+    gameState.addRaceReputation('human', 10);
 
     const saved = saveSystem.save();
     expect(saved).toBe(true);
@@ -28,6 +29,8 @@ describe('SaveSystem', () => {
     expect(loaded).toBe(true);
     expect(gameState.coins).toBe(250);
     expect(gameState.reputation).toBe(25);
+    expect(gameState.getRaceReputation('goblin')).toBe(15);
+    expect(gameState.getRaceReputation('human')).toBe(10);
   });
 
   it('should detect existing save', () => {

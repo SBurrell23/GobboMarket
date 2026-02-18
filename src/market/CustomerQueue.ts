@@ -3,7 +3,7 @@ import { gameState } from '../core/GameState.js';
 import { type Customer, createCustomer, getAvailableCustomerTypes } from './Customer.js';
 
 const MAX_QUEUE_SIZE = 5;
-const BASE_SPAWN_INTERVAL = 6000;
+const BASE_SPAWN_INTERVAL = 5000;
 const MIN_SPAWN_INTERVAL = 2500;
 
 export class CustomerQueue {
@@ -57,7 +57,7 @@ export class CustomerQueue {
   }
 
   private startPatienceTimer(customer: Customer): void {
-    const timeout = customer.patience * 10000;
+    const timeout = customer.patience * 20000;
     setTimeout(() => {
       const idx = this.queue.findIndex(c => c.id === customer.id);
       if (idx !== -1) {

@@ -12,9 +12,9 @@ export function calculateReputationGain(quality: number, haggleWon: boolean): nu
   return rep;
 }
 
-export function awardReputation(quality: number, haggleWon: boolean): number {
+export function awardReputation(quality: number, haggleWon: boolean, customerRace: string): number {
   const rep = calculateReputationGain(quality, haggleWon);
-  gameState.addReputation(rep);
+  gameState.addRaceReputation(customerRace, rep);
   return rep;
 }
 

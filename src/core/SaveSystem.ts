@@ -49,7 +49,18 @@ export class SaveSystem {
     }
   }
 
-  private migrate(_envelope: SaveEnvelope): boolean {
+  private migrate(envelope: SaveEnvelope): boolean {
+    if (envelope.version === 1) {
+      // v1 -> v2: reputation (number) -> raceReputation (Record)
+      // deserialize handles the migration internally
+      const success = gameState.deserialize(envelope.data);
+      if (success) {
+        gameState.cleanExpiredCooldowns();
+        this.save();
+        eventBus.emit('game:loaded', {});
+      }
+      return success;
+    }
     return false;
   }
 

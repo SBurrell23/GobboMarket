@@ -68,13 +68,22 @@ describe('GameState', () => {
       expect(state.reputation).toBe(0);
     });
 
-    it('should add reputation', () => {
-      state.addReputation(10);
+    it('should add per-race reputation', () => {
+      state.addRaceReputation('goblin', 10);
+      expect(state.getRaceReputation('goblin')).toBe(10);
       expect(state.reputation).toBe(10);
     });
 
+    it('should track multiple races independently', () => {
+      state.addRaceReputation('goblin', 10);
+      state.addRaceReputation('human', 20);
+      expect(state.getRaceReputation('goblin')).toBe(10);
+      expect(state.getRaceReputation('human')).toBe(20);
+      expect(state.reputation).toBe(30);
+    });
+
     it('should not add negative reputation', () => {
-      state.addReputation(-5);
+      state.addRaceReputation('goblin', -5);
       expect(state.reputation).toBe(0);
     });
   });
@@ -85,12 +94,15 @@ describe('GameState', () => {
       expect(state.tierName).toBe('Muddy Alley');
     });
 
-    it('should unlock tier when coins and reputation meet thresholds', () => {
+    it('should unlock tier when coins and race reputation meet thresholds', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
+      // T1 requires: 150 coins, goblin: 50, human: 50
       state.addCoins(200, 'test');
-      state.addReputation(20);
+      state.addRaceReputation('goblin', 50);
+      expect(state.currentTier).toBe(0); // Still need human rep
+      state.addRaceReputation('human', 50);
 
       expect(state.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
@@ -100,8 +112,11 @@ describe('GameState', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      state.addCoins(500, 'test');
-      state.addReputation(50);
+      // T2 requires: 500 coins, goblin: 100, human: 100, elf: 50
+      state.addCoins(600, 'test');
+      state.addRaceReputation('goblin', 100);
+      state.addRaceReputation('human', 100);
+      state.addRaceReputation('elf', 50);
 
       expect(state.currentTier).toBe(2);
       expect(tierCb).toHaveBeenCalledTimes(2);
@@ -199,7 +214,8 @@ describe('GameState', () => {
   describe('serialization', () => {
     it('should serialize and deserialize state', () => {
       state.addCoins(200, 'test');
-      state.addReputation(30);
+      state.addRaceReputation('goblin', 20);
+      state.addRaceReputation('human', 10);
       state.addUpgrade('forge_hammer');
 
       const json = state.serialize();
@@ -209,6 +225,8 @@ describe('GameState', () => {
       expect(success).toBe(true);
       expect(newState.coins).toBe(250);
       expect(newState.reputation).toBe(30);
+      expect(newState.getRaceReputation('goblin')).toBe(20);
+      expect(newState.getRaceReputation('human')).toBe(10);
       expect(newState.hasUpgrade('forge_hammer')).toBe(true);
     });
 
@@ -226,12 +244,13 @@ describe('GameState', () => {
   describe('reset', () => {
     it('should reset to default state', () => {
       state.addCoins(500, 'test');
-      state.addReputation(100);
+      state.addRaceReputation('goblin', 100);
       state.addUpgrade('forge_hammer');
       state.reset();
 
       expect(state.coins).toBe(50);
       expect(state.reputation).toBe(0);
+      expect(state.getRaceReputation('goblin')).toBe(0);
       expect(state.hasUpgrade('forge_hammer')).toBe(false);
     });
   });

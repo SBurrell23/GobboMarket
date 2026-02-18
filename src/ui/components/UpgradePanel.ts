@@ -1,9 +1,10 @@
 import { eventBus } from '../../core/EventBus.js';
 import { gameState } from '../../core/GameState.js';
 import { saveSystem } from '../../core/SaveSystem.js';
-import { TIER_REPUTATION_REQUIRED, TIER_THRESHOLDS } from '../../core/constants.js';
+import { TIER_RACE_REPUTATION_REQUIRED, TIER_THRESHOLDS, CUSTOMER_ICONS } from '../../core/constants.js';
 import { getAvailableUpgrades, purchaseUpgrade } from '../../progression/Upgrades.js';
 import { getAvailableRecipes, purchaseRecipe } from '../../progression/Recipes.js';
+import { getGoodsById } from '../../market/Goods.js';
 import { getCompletedMilestones, getAllMilestones } from '../../progression/Milestones.js';
 import { getReputationLevel } from '../../progression/Reputation.js';
 import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
@@ -62,19 +63,38 @@ export class UpgradePanel {
     let nextTierHtml = '';
     if (hasNext) {
       const coinPct = Math.min(100, (gameState.coins / TIER_THRESHOLDS[nextTier]) * 100);
-      const repPct = Math.min(100, (gameState.reputation / TIER_REPUTATION_REQUIRED[nextTier]) * 100);
       const nextName = getTierInfo(nextTier).name;
       const coinsMet = gameState.coins >= TIER_THRESHOLDS[nextTier];
-      const repMet = gameState.reputation >= TIER_REPUTATION_REQUIRED[nextTier];
       const coinCheck = coinsMet ? '✅' : '⬜';
-      const repCheck = repMet ? '✅' : '⬜';
       const coinBarColor = coinsMet ? 'var(--green-bright, #4ade80)' : 'var(--gold-dim)';
-      const repBarColor = repMet ? 'var(--green-bright, #4ade80)' : 'var(--green)';
+
+      const raceReqs = TIER_RACE_REPUTATION_REQUIRED[nextTier] ?? {};
+      let raceRepBarsHtml = '';
+      for (const [race, req] of Object.entries(raceReqs)) {
+        const current = gameState.getRaceReputation(race);
+        const pct = Math.min(100, (current / req) * 100);
+        const met = current >= req;
+        const check = met ? '✅' : '⬜';
+        const barColor = met ? 'var(--green-bright, #4ade80)' : 'var(--gold-dim)';
+        const icon = CUSTOMER_ICONS[race] ?? '❓';
+        raceRepBarsHtml += `
+          <div style="margin-bottom: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--ink-dim);">
+              <span>${check} ${icon} ${race.charAt(0).toUpperCase() + race.slice(1)}</span>
+              <span>${current} / ${req}</span>
+            </div>
+            <div style="height: 5px; background: var(--parchment-lighter); border-radius: 3px; overflow: hidden; margin-top: 1px;">
+              <div style="height: 100%; background: ${barColor}; border-radius: 3px; width: ${pct}%; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        `;
+      }
+
       nextTierHtml = `
         <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--parchment-lighter);">
           <div style="font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 4px;">Progress to <span style="color: var(--gold);">${nextName}</span></div>
-          <div style="font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 8px; font-style: italic;">Both requirements must be met to unlock</div>
-          <div style="margin-bottom: 4px;">
+          <div style="font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 8px; font-style: italic;">All requirements must be met to unlock</div>
+          <div style="margin-bottom: 6px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--ink-dim);">
               <span>${coinCheck} 🪙 Coins</span>
               <span>${gameState.coins.toLocaleString()} / ${TIER_THRESHOLDS[nextTier].toLocaleString()}</span>
@@ -83,15 +103,8 @@ export class UpgradePanel {
               <div style="height: 100%; background: ${coinBarColor}; border-radius: 3px; width: ${coinPct}%; transition: width 0.3s ease;"></div>
             </div>
           </div>
-          <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--ink-dim);">
-              <span>${repCheck} ⭐ Reputation</span>
-              <span>${gameState.reputation} / ${TIER_REPUTATION_REQUIRED[nextTier]}</span>
-            </div>
-            <div style="height: 6px; background: var(--parchment-lighter); border-radius: 3px; overflow: hidden; margin-top: 2px;">
-              <div style="height: 100%; background: ${repBarColor}; border-radius: 3px; width: ${repPct}%; transition: width 0.3s ease;"></div>
-            </div>
-          </div>
+          <div style="font-size: 0.8rem; color: var(--ink-dim); margin-bottom: 4px;">⭐ Reputation by Race</div>
+          ${raceRepBarsHtml}
         </div>
       `;
     }
@@ -143,6 +156,20 @@ export class UpgradePanel {
     for (const tier of tiers) {
       const isCurrent = tier.tier === gameState.currentTier;
       const isUnlocked = tier.tier <= gameState.currentTier;
+      const raceReqs = tier.raceReputationRequired;
+      const raceEntries = Object.entries(raceReqs);
+
+      let raceReqHtml = '';
+      if (raceEntries.length > 0 && !isUnlocked) {
+        const chips = raceEntries.map(([race, req]) => {
+          const current = gameState.getRaceReputation(race);
+          const met = current >= req;
+          const icon = CUSTOMER_ICONS[race] ?? '❓';
+          return `<span style="font-size: 0.7rem; color: ${met ? 'var(--green-bright, #4ade80)' : 'var(--ink-dim)'};">${icon}${req}</span>`;
+        }).join(' ');
+        raceReqHtml = `<div style="margin-top: 2px; display: flex; gap: 4px; flex-wrap: wrap;">${chips}</div>`;
+      }
+
       const item = document.createElement('div');
       item.style.cssText = `
         padding: 8px; border-radius: 4px; font-size: 0.85rem;
@@ -159,6 +186,7 @@ export class UpgradePanel {
             ${tier.coinThreshold > 0 ? tier.coinThreshold.toLocaleString() + ' 🪙' : 'Start'}
           </span>
         </div>
+        ${raceReqHtml}
       `;
       list.appendChild(item);
     }
@@ -250,8 +278,10 @@ export class UpgradePanel {
           cursor: ${canAfford ? 'pointer' : 'default'};
           transition: border-color 0.15s;
         `;
+        const goods = getGoodsById(recipe.goodsId);
+        const icon = goods?.icon ?? '📦';
         item.innerHTML = `
-          <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${recipe.name}</span>
+          <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${icon} ${recipe.name}</span>
           <span style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display);">
             ${recipe.cost.toLocaleString()} 🪙
           </span>

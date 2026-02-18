@@ -3,7 +3,7 @@ import {
   MAX_COINS,
   TIER_THRESHOLDS,
   TIER_NAMES,
-  TIER_REPUTATION_REQUIRED,
+  TIER_RACE_REPUTATION_REQUIRED,
   STALL_BASE_SLOTS,
 } from './constants.js';
 import { getGoodsById } from '../market/Goods.js';
@@ -19,7 +19,7 @@ export interface InventoryItem {
 
 export interface GameStateData {
   coins: number;
-  reputation: number;
+  raceReputation: Record<string, number>;
   currentTier: number;
   inventory: InventoryItem[];
   stallSlots: number;
@@ -38,7 +38,7 @@ export interface GameStateData {
 function createDefaultState(): GameStateData {
   return {
     coins: 50,
-    reputation: 0,
+    raceReputation: {},
     currentTier: 0,
     inventory: [],
     stallSlots: STALL_BASE_SLOTS,
@@ -71,7 +71,11 @@ class GameState {
   }
 
   get reputation(): number {
-    return this.state.reputation;
+    return Object.values(this.state.raceReputation).reduce((sum, v) => sum + v, 0);
+  }
+
+  getRaceReputation(race: string): number {
+    return this.state.raceReputation[race] ?? 0;
   }
 
   get currentTier(): number {
@@ -113,10 +117,10 @@ class GameState {
     return true;
   }
 
-  addReputation(amount: number): void {
+  addRaceReputation(race: string, amount: number): void {
     if (amount <= 0) return;
-    this.state.reputation += amount;
-    eventBus.emit('reputation:changed', { amount, total: this.state.reputation });
+    this.state.raceReputation[race] = (this.state.raceReputation[race] ?? 0) + amount;
+    eventBus.emit('reputation:changed', { amount, total: this.reputation, race });
     this.checkTierUnlock();
   }
 
@@ -126,17 +130,22 @@ class GameState {
       advanced = false;
       const nextTier = this.state.currentTier + 1;
       if (nextTier >= TIER_NAMES.length) return;
-      if (
-        this.state.coins >= TIER_THRESHOLDS[nextTier] &&
-        this.state.reputation >= TIER_REPUTATION_REQUIRED[nextTier]
-      ) {
-        this.state.currentTier = nextTier;
-        eventBus.emit('tier:unlocked', {
-          tier: nextTier,
-          name: TIER_NAMES[nextTier],
-        });
-        advanced = true;
+      if (this.state.coins < TIER_THRESHOLDS[nextTier]) continue;
+
+      const raceReqs = TIER_RACE_REPUTATION_REQUIRED[nextTier];
+      if (raceReqs) {
+        const allMet = Object.entries(raceReqs).every(
+          ([race, req]) => this.getRaceReputation(race) >= req,
+        );
+        if (!allMet) continue;
       }
+
+      this.state.currentTier = nextTier;
+      eventBus.emit('tier:unlocked', {
+        tier: nextTier,
+        name: TIER_NAMES[nextTier],
+      });
+      advanced = true;
     }
   }
 
@@ -270,9 +279,18 @@ class GameState {
 
   deserialize(json: string): boolean {
     try {
-      const parsed = JSON.parse(json) as GameStateData;
-      if (typeof parsed.coins !== 'number' || typeof parsed.reputation !== 'number') {
+      const parsed = JSON.parse(json) as GameStateData & { reputation?: number };
+      if (typeof parsed.coins !== 'number') {
         return false;
+      }
+      // Migrate old single-number reputation to per-race
+      if (typeof parsed.reputation === 'number' && !parsed.raceReputation) {
+        const oldRep = parsed.reputation;
+        parsed.raceReputation = {
+          goblin: Math.floor(oldRep / 2),
+          human: Math.ceil(oldRep / 2),
+        };
+        delete parsed.reputation;
       }
       this.state = { ...createDefaultState(), ...parsed };
       return true;

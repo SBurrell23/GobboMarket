@@ -4,7 +4,7 @@ import { customerQueue } from '../../market/CustomerQueue.js';
 import type { Customer } from '../../market/Customer.js';
 import { getGoodsById, getCraftableGoods, getBuyableGoods, type GoodsDefinition } from '../../market/Goods.js';
 import { calculateBuyPrice, calculateSellPrice } from '../../market/PricingEngine.js';
-import { QUALITY_LABELS } from '../../core/constants.js';
+import { QUALITY_LABELS, REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUS } from '../../core/constants.js';
 import { ForgeGame } from '../../minigames/ForgeGame.js';
 import { HaggleGame } from '../../minigames/HaggleGame.js';
 import { AppraisalGame } from '../../minigames/AppraisalGame.js';
@@ -12,6 +12,15 @@ import { RuneCraftGame } from '../../minigames/RuneCraftGame.js';
 import { awardReputation } from '../../progression/Reputation.js';
 import { checkMilestones } from '../../progression/Milestones.js';
 import { showTooltip, hideTooltip } from './Tooltip.js';
+
+const CATEGORY_PLURAL: Record<string, string> = {
+  weapon: 'WEAPONS',
+  armor: 'ARMOR',
+  potion: 'POTIONS',
+  trinket: 'TRINKETS',
+  food: 'FOOD',
+  material: 'MATERIALS',
+};
 
 export class MarketStall {
   private el: HTMLElement;
@@ -264,10 +273,15 @@ export class MarketStall {
           `;
         }
 
+        const qualityRepBonus = item.quality >= 3 ? REPUTATION_QUALITY_BONUS * (item.quality - 2) : 0;
+        const repBonusTag = qualityRepBonus > 0
+          ? ` <span style="color: var(--green-bright, #4ade80); font-size: 0.65rem;">(+${qualityRepBonus})</span>`
+          : '';
+
         card.innerHTML = `
           <div class="goods-card__icon">${goods.icon}</div>
           <div class="goods-card__name">${goods.name}</div>
-          <div class="goods-card__quality" style="color: ${item.quality >= 3 ? 'var(--gold)' : item.quality >= 2 ? 'var(--green-bright)' : 'var(--ink-dim)'}">${qualityLabel}</div>
+          <div class="goods-card__quality" style="color: ${item.quality >= 3 ? 'var(--gold)' : item.quality >= 2 ? 'var(--green-bright)' : 'var(--ink-dim)'}">${qualityLabel}${repBonusTag}</div>
           ${item.enchanted ? '<div style="color: var(--blue-bright); font-size: 0.75rem;">✨ Enchanted x' + item.enchantMultiplier.toFixed(1) + '</div>' : ''}
           ${priceHtml}
         `;
@@ -404,11 +418,15 @@ export class MarketStall {
       : customer.budgetMultiplier >= 1.0 ? 'var(--ink-dim)'
       : 'var(--accent-bright)';
 
+    const raceName = customer.type.toUpperCase();
+    const wantsPlural = CATEGORY_PLURAL[customer.desiredCategory] ?? customer.desiredCategory.toUpperCase();
+    const baseRep = REPUTATION_PER_SALE_BASE;
+
     card.innerHTML = `
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
-        <div class="customer-card__name">${customer.name}</div>
-        <div class="customer-card__desire">Wants: <span style="text-transform: uppercase; color: var(--gold); font-family: var(--font-display); letter-spacing: 0.5px;">${customer.desiredCategory}</span></div>
+        <div class="customer-card__name">${customer.name} the <span style="color: var(--ink); font-size: 0.85rem;">${raceName}</span> <span style="color: var(--green-bright, #4ade80); font-size: 0.72rem;">(+${baseRep})</span></div>
+        <div class="customer-card__desire">Wants: <span style="color: var(--gold); font-family: var(--font-display); letter-spacing: 0.5px;">${wantsPlural}</span></div>
         <div style="font-size: 0.75rem; display: flex; gap: 8px;">
           <span style="color: ${haggleColor};">🎲 ${haggleLabel}</span>
           <span style="color: ${budgetColor};">💰 ${budgetLabel}</span>
@@ -425,17 +443,6 @@ export class MarketStall {
       this.startSale(customer);
     });
 
-    card.addEventListener('mouseenter', () => {
-      showTooltip(card, `
-        <strong style="color: var(--gold)">${customer.name}</strong> the ${customer.type}<br>
-        Wants: <span style="text-transform: uppercase; color: var(--gold);">${customer.desiredCategory}</span><br>
-        Haggle skill: ${Math.round(customer.haggleSkill * 100)}%<br>
-        Budget: ${customer.budgetMultiplier > 1 ? 'Generous' : customer.budgetMultiplier < 1 ? 'Cheap' : 'Normal'}<br>
-        <span style="color: var(--ink-dim);">Click to select, then choose an item from your stall.</span>
-      `);
-    });
-    card.addEventListener('mouseleave', hideTooltip);
-
     const patienceBar = card.querySelector('.patience-bar__fill') as HTMLElement;
     if (patienceBar) {
       this.patienceBars.push({ bar: patienceBar, customer });
@@ -447,7 +454,7 @@ export class MarketStall {
   private updatePatienceBars(): void {
     const now = Date.now();
     for (const { bar, customer } of this.patienceBars) {
-      const totalMs = customer.patience * 10000;
+      const totalMs = customer.patience * 20000;
       const elapsed = now - customer.arrivedAt;
       const remaining = Math.max(0, 1 - elapsed / totalMs);
       bar.style.width = `${remaining * 100}%`;
@@ -570,7 +577,7 @@ export class MarketStall {
 
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">🎲 Haggling with ${customer.icon} ${customer.name}</h2><div id="haggle-area"></div>`;
 
-    const haggle = new HaggleGame(customer);
+    const haggle = new HaggleGame(customer, item.quality);
     haggle.onComplete = (result) => {
       haggle.destroy();
       eventBus.emit('minigame:completed', { type: 'haggle', score: result.score });
@@ -582,7 +589,7 @@ export class MarketStall {
       gameState.addCoins(priceCalc.finalPrice, `sale:${item.goodsId}`);
       gameState.recordSale();
       gameState.recordHaggle(won);
-      awardReputation(item.quality, won);
+      awardReputation(item.quality, won, customer.type);
 
       this.selectedCustomer = null;
       customerQueue.removeCustomer(customer.id);

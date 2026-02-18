@@ -1,6 +1,6 @@
 import type { Minigame, MinigameResult } from './MinigameBase.js';
-// Haggle multiplier constants are now hardcoded in showResult()
 import { gameState } from '../core/GameState.js';
+import { calculateReputationGain } from '../progression/Reputation.js';
 import type { Customer } from '../market/Customer.js';
 
 export class HaggleGame implements Minigame {
@@ -9,14 +9,16 @@ export class HaggleGame implements Minigame {
 
   private container: HTMLElement | null = null;
   private customer: Customer;
+  private itemQuality: number;
   private customerRoll = 0;
   private playerTotal = 0;
   private playerRolls: number[] = [];
   private phase: 'customer-roll' | 'player-turn' | 'result' = 'customer-roll';
   private outcome: 'win' | 'bust' | 'settle' | null = null;
 
-  constructor(customer: Customer) {
+  constructor(customer: Customer, itemQuality: number = 2) {
     this.customer = customer;
+    this.itemQuality = itemQuality;
   }
 
   start(container: HTMLElement): void {
@@ -193,8 +195,12 @@ export class HaggleGame implements Minigame {
       </div>
 
       <p style="color: var(--ink); margin-bottom: 8px;">${explanation}</p>
-      <p style="color: ${titleColor}; font-size: 1.1rem; font-family: var(--font-display); margin-bottom: 20px;">
+      <p style="color: ${titleColor}; font-size: 1.1rem; font-family: var(--font-display); margin-bottom: 12px;">
         Price multiplier: x${multiplier.toFixed(2)}
+      </p>
+
+      <p style="color: var(--green-bright, #4ade80); font-size: 0.9rem; margin-bottom: 20px;">
+        ⭐+${calculateReputationGain(this.itemQuality, this.outcome === 'win')} ${this.customer.type.charAt(0).toUpperCase() + this.customer.type.slice(1)} Reputation
       </p>
 
       <button class="btn btn-gold done-btn">Accept Deal</button>

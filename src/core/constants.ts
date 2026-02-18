@@ -1,7 +1,7 @@
 export const MAX_COINS = 1_000_000;
 
 export const SAVE_KEY = 'gobbo-market-save';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export const TIER_NAMES = [
   'Muddy Alley',
@@ -16,7 +16,18 @@ export const TIER_NAMES = [
 ] as const;
 
 export const TIER_THRESHOLDS = [0, 150, 500, 1_500, 5_000, 15_000, 50_000, 200_000, 500_000] as const;
-export const TIER_REPUTATION_REQUIRED = [0, 15, 50, 120, 300, 600, 1_200, 2_500, 5_000] as const;
+
+export const TIER_RACE_REPUTATION_REQUIRED: Record<string, number>[] = [
+  {},                                                                                 // T0: Muddy Alley
+  { goblin: 50, human: 50 },                                                         // T1: Back Alley Bazaar
+  { goblin: 100, human: 100, elf: 50 },                                              // T2: Market Square
+  { goblin: 150, human: 150, elf: 100, dwarf: 50 },                                  // T3: Trader's Row
+  { goblin: 200, human: 200, elf: 150, dwarf: 100, orc: 50 },                        // T4: Merchant Quarter
+  { goblin: 300, human: 300, elf: 200, dwarf: 150, orc: 100, halfling: 50 },         // T5: Guild District
+  { goblin: 400, human: 400, elf: 300, dwarf: 250, orc: 150, halfling: 100 },        // T6: Royal Bazaar
+  { goblin: 500, human: 500, elf: 400, dwarf: 350, orc: 250, halfling: 200, noble: 100 },        // T7: Diamond Exchange
+  { goblin: 600, human: 600, elf: 500, dwarf: 450, orc: 350, halfling: 300, noble: 200, wizard: 100 }, // T8: Grand Exchange
+];
 
 export const QUALITY_LABELS = ['Shoddy', 'Passable', 'Fine', 'Superior', 'Masterwork'] as const;
 export const QUALITY_MULTIPLIERS = [0.6, 0.85, 1.0, 1.3, 1.8] as const;

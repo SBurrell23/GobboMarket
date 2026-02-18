@@ -1,10 +1,10 @@
-import { TIER_NAMES, TIER_THRESHOLDS, TIER_REPUTATION_REQUIRED } from '../core/constants.js';
+import { TIER_NAMES, TIER_THRESHOLDS, TIER_RACE_REPUTATION_REQUIRED } from '../core/constants.js';
 
 export interface TierInfo {
   tier: number;
   name: string;
   coinThreshold: number;
-  reputationRequired: number;
+  raceReputationRequired: Record<string, number>;
   description: string;
 }
 
@@ -25,16 +25,11 @@ export function getTierInfo(tier: number): TierInfo {
     tier,
     name: TIER_NAMES[tier] ?? 'Unknown',
     coinThreshold: TIER_THRESHOLDS[tier] ?? 0,
-    reputationRequired: TIER_REPUTATION_REQUIRED[tier] ?? 0,
+    raceReputationRequired: TIER_RACE_REPUTATION_REQUIRED[tier] ?? {},
     description: TIER_DESCRIPTIONS[tier] ?? '',
   };
 }
 
 export function getAllTiers(): TierInfo[] {
   return TIER_NAMES.map((_, i) => getTierInfo(i));
-}
-
-export function canUnlockTier(tier: number, coins: number, reputation: number): boolean {
-  if (tier < 0 || tier >= TIER_NAMES.length) return false;
-  return coins >= TIER_THRESHOLDS[tier] && reputation >= TIER_REPUTATION_REQUIRED[tier];
 }

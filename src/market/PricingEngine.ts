@@ -30,17 +30,23 @@ export function calculateSellPrice(
     : 1.0;
   const budgetMult = customer.budgetMultiplier;
 
-  // Sturdy Workbench: +10% sell price on crafted items
   const workbenchBonus = (goods?.craftable && gameState.hasUpgrade('sturdy_workbench')) ? 1.10 : 1.0;
-  // Grand Emporium: +15% on all goods
   const emporiumBonus = gameState.hasUpgrade('grand_emporium') ? 1.15 : 1.0;
-  // Golden Scales: +10% on all goods
   const scalesBonus = gameState.hasUpgrade('golden_scales') ? 1.10 : 1.0;
-  // Merchant Legend: 2x all sale prices
   const legendBonus = gameState.hasUpgrade('merchant_legend') ? 2.0 : 1.0;
 
+  let lowTierBonus = 1.0;
+  const itemTier = goods?.tier ?? 0;
+  if (gameState.hasUpgrade('relic_connoisseur') && itemTier >= 1 && itemTier <= 6) {
+    lowTierBonus = 1.50;
+  } else if (gameState.hasUpgrade('vintage_trader') && itemTier >= 1 && itemTier <= 4) {
+    lowTierBonus = 1.40;
+  } else if (gameState.hasUpgrade('bargain_specialist') && itemTier >= 1 && itemTier <= 3) {
+    lowTierBonus = 1.30;
+  }
+
   const finalPrice = Math.round(
-    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus * emporiumBonus * scalesBonus * legendBonus
+    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus * emporiumBonus * scalesBonus * legendBonus * lowTierBonus
   );
 
   return {

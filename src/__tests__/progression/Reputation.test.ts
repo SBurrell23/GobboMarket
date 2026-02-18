@@ -35,16 +35,16 @@ describe('Reputation', () => {
   it('should return correct reputation level', () => {
     expect(getReputationLevel()).toBe('Nobody');
 
-    gameState.addReputation(50);
+    gameState.addRaceReputation('goblin', 50);
     expect(getReputationLevel()).toBe('Known');
 
-    gameState.addReputation(150);
+    gameState.addRaceReputation('human', 150);
     expect(getReputationLevel()).toBe('Respected');
 
-    gameState.addReputation(400);
+    gameState.addRaceReputation('elf', 400);
     expect(getReputationLevel()).toBe('Renowned');
 
-    gameState.addReputation(900);
+    gameState.addRaceReputation('dwarf', 900);
     expect(getReputationLevel()).toBe('Legendary');
   });
 });

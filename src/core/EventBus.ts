@@ -4,7 +4,7 @@ export interface GameEvents {
   'coins:changed': { amount: number; total: number };
   'coins:earned': { amount: number; source: string };
   'coins:spent': { amount: number; item: string };
-  'reputation:changed': { amount: number; total: number };
+  'reputation:changed': { amount: number; total: number; race: string };
   'tier:unlocked': { tier: number; name: string };
   'item:crafted': { itemId: string; quality: number };
   'item:sold': { itemId: string; price: number; customerId: string };
