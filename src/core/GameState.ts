@@ -6,6 +6,7 @@ import {
   TIER_REPUTATION_REQUIRED,
   STALL_BASE_SLOTS,
 } from './constants.js';
+import { getGoodsById } from '../market/Goods.js';
 
 export interface InventoryItem {
   id: string;
@@ -31,6 +32,7 @@ export interface GameStateData {
   itemsSold: number;
   haggleWins: number;
   haggleLosses: number;
+  cooldowns: Record<string, number>;
 }
 
 function createDefaultState(): GameStateData {
@@ -49,6 +51,7 @@ function createDefaultState(): GameStateData {
     itemsSold: 0,
     haggleWins: 0,
     haggleLosses: 0,
+    cooldowns: {},
   };
 }
 
@@ -203,6 +206,57 @@ class GameState {
       this.state.haggleWins++;
     } else {
       this.state.haggleLosses++;
+    }
+  }
+
+  isOnCooldown(goodsId: string): boolean {
+    const expiry = this.state.cooldowns[goodsId];
+    if (!expiry) return false;
+    if (Date.now() >= expiry) {
+      delete this.state.cooldowns[goodsId];
+      return false;
+    }
+    return true;
+  }
+
+  getCooldownRemaining(goodsId: string): number {
+    const expiry = this.state.cooldowns[goodsId];
+    if (!expiry) return 0;
+    return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
+  }
+
+  getEffectiveCooldown(goodsId: string): number {
+    const goods = getGoodsById(goodsId);
+    if (!goods) return 0;
+    let duration = goods.cooldown;
+
+    if (this.hasUpgrade('quick_hands') && goods.tier <= 1) {
+      duration *= 0.75;
+    }
+    if (this.hasUpgrade('efficient_workshop') && goods.craftable) {
+      duration *= 0.80;
+    }
+    if (this.hasUpgrade('supply_chain') && !goods.craftable) {
+      duration *= 0.80;
+    }
+    if (this.hasUpgrade('master_supplier')) {
+      duration *= 0.75;
+    }
+
+    return Math.round(duration);
+  }
+
+  startCooldown(goodsId: string, baseDurationSec: number): void {
+    const duration = this.getEffectiveCooldown(goodsId) || baseDurationSec;
+    this.state.cooldowns[goodsId] = Date.now() + Math.round(duration * 1000);
+  }
+
+  cleanExpiredCooldowns(): void {
+    const now = Date.now();
+    for (const id in this.state.cooldowns) {
+      if (this.state.cooldowns[id] <= now) {
+        delete this.state.cooldowns[id];
+      }
     }
   }
 

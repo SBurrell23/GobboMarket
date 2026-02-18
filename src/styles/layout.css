@@ -152,6 +152,7 @@
 }
 
 .goods-card {
+  position: relative;
   padding: var(--spacing-sm);
   background: var(--parchment-light);
   border: 1px solid var(--parchment-lighter);

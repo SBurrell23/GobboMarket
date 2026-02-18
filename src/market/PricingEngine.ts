@@ -23,7 +23,11 @@ export function calculateSellPrice(
   const qualityMult = QUALITY_MULTIPLIERS[Math.min(item.quality, QUALITY_MULTIPLIERS.length - 1)];
   const enchantMult = item.enchanted ? item.enchantMultiplier : 1.0;
 
-  const categoryBonus = goods && customer.desiredCategory === goods.category ? 1.25 : 1.0;
+  const categoryBonus = goods
+    ? (customer.desiredCategory === goods.category ? 1.25
+      : customer.refusedCategory === goods.category ? 0.5
+      : 1.0)
+    : 1.0;
   const budgetMult = customer.budgetMultiplier;
 
   // Sturdy Workbench: +10% sell price on crafted items

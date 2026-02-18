@@ -40,6 +40,7 @@ export class SaveSystem {
 
       const success = gameState.deserialize(envelope.data);
       if (success) {
+        gameState.cleanExpiredCooldowns();
         eventBus.emit('game:loaded', {});
       }
       return success;

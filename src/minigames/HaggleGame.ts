@@ -1,10 +1,5 @@
 import type { Minigame, MinigameResult } from './MinigameBase.js';
-import {
-  HAGGLE_WIN_MULTIPLIER_MIN,
-  HAGGLE_WIN_MULTIPLIER_MAX,
-  HAGGLE_LOSE_MULTIPLIER_MIN,
-  HAGGLE_LOSE_MULTIPLIER_MAX,
-} from '../core/constants.js';
+// Haggle multiplier constants are now hardcoded in showResult()
 import { gameState } from '../core/GameState.js';
 import type { Customer } from '../market/Customer.js';
 
@@ -160,19 +155,25 @@ export class HaggleGame implements Minigame {
       title = 'Great Deal!';
       titleColor = 'var(--green-bright)';
       explanation = `Your total of ${this.playerTotal} beat their ${this.customerRoll}!`;
-      const winRange = HAGGLE_WIN_MULTIPLIER_MAX - HAGGLE_WIN_MULTIPLIER_MIN;
-      multiplier = HAGGLE_WIN_MULTIPLIER_MIN + Math.random() * winRange;
+      multiplier = 1.5;
     } else if (this.outcome === 'settle') {
+      const closeness = this.customerRoll > 1
+        ? Math.min(this.playerTotal / (this.customerRoll - 1), 1)
+        : 0;
+      multiplier = 1.0 + closeness * 0.25;
       title = 'Fair Deal';
       titleColor = 'var(--gold)';
-      explanation = `You settled at ${this.playerTotal}. A decent bargain.`;
-      multiplier = 0.95 + Math.random() * 0.1;
+      if (this.playerTotal > 0) {
+        const bonus = multiplier > 1.01 ? ` (x${multiplier.toFixed(2)})` : '';
+        explanation = `You settled at ${this.playerTotal} vs their ${this.customerRoll}.${bonus}`;
+      } else {
+        explanation = `You accepted the standard price. A fair deal.`;
+      }
     } else {
       title = 'Busted!';
       titleColor = 'var(--accent-bright)';
       explanation = `You rolled a 1! The customer saw your desperation.`;
-      const loseRange = HAGGLE_LOSE_MULTIPLIER_MAX - HAGGLE_LOSE_MULTIPLIER_MIN;
-      multiplier = HAGGLE_LOSE_MULTIPLIER_MIN + Math.random() * loseRange;
+      multiplier = 0.65 + Math.random() * 0.2;
     }
 
     const wrapper = document.createElement('div');

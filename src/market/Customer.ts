@@ -16,6 +16,7 @@ export interface Customer {
   name: string;
   icon: string;
   desiredCategory: GoodsDefinition['category'];
+  refusedCategory: GoodsDefinition['category'];
   patience: number;
   haggleSkill: number;
   budgetMultiplier: number;
@@ -50,6 +51,8 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+const ALL_CATEGORIES: GoodsDefinition['category'][] = ['weapon', 'armor', 'potion', 'trinket', 'food', 'material'];
+
 export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
   const names = NAME_POOLS[type] ?? HUMAN_NAMES;
   const prefs = CATEGORY_PREFERENCES[type] ?? ['weapon'];
@@ -63,12 +66,16 @@ export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
     haggleSkill = 0.66 + Math.random() * 0.29;
   }
   haggleSkill = Math.round(haggleSkill * 100) / 100;
+  const desired = pickRandom(prefs);
+  const refusePool = ALL_CATEGORIES.filter(c => c !== desired);
+  const refused = pickRandom(refusePool);
   return {
     id: `customer-${nextId++}`,
     type,
     name: pickRandom(names),
     icon: CUSTOMER_ICONS[type] ?? '🧑',
-    desiredCategory: pickRandom(prefs),
+    desiredCategory: desired,
+    refusedCategory: refused,
     patience: CUSTOMER_PATIENCE[type] ?? 5,
     haggleSkill,
     budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'goblin' ? 0.8 : 1.0,

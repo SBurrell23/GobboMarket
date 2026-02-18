@@ -45,6 +45,9 @@ describe('GameFlow Integration', () => {
 
       // 3. Sell to customer via pricing engine
       const customer = createCustomer('human');
+      // Force desired category to weapon so we get the bonus
+      customer.desiredCategory = 'weapon';
+      customer.refusedCategory = 'food';
       const priceCalc = calculateSellPrice(item, customer);
       const sellPrice = priceCalc.finalPrice;
 

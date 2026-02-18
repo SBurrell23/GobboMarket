@@ -224,7 +224,7 @@ export class UpgradePanel {
   }
 
   private renderRecipes(target: HTMLElement): void {
-    const recipes = getAvailableRecipes();
+    const recipes = getAvailableRecipes().sort((a, b) => a.cost - b.cost);
 
     const panel = document.createElement('div');
     panel.className = 'panel';

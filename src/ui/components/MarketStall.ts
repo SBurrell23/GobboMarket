@@ -22,6 +22,10 @@ export class MarketStall {
   private minigameContainer: HTMLElement;
   private hasAnimatedEntrance = false;
 
+  private selectedCustomer: Customer | null = null;
+
+  private cooldownGoodsIds = new Set<string>();
+
   // Persistent DOM references for diff-based customer rendering
   private customerPanel: HTMLElement | null = null;
   private customerList: HTMLElement | null = null;
@@ -63,12 +67,20 @@ export class MarketStall {
 
     eventBus.on('inventory:changed', () => this.renderStall());
     eventBus.on('customer:arrived', () => this.renderCustomers());
-    eventBus.on('customer:left', () => this.renderCustomers());
+    eventBus.on('customer:left', ({ customerId }) => {
+      if (this.selectedCustomer?.id === customerId) {
+        this.selectedCustomer = null;
+        this.renderStall();
+      }
+      this.renderCustomers();
+    });
     eventBus.on('tier:unlocked', () => this.render());
     eventBus.on('coins:changed', () => this.renderSuppliers());
     eventBus.on('stall:upgraded', () => this.renderStall());
     eventBus.on('recipe:unlocked', () => this.renderSuppliers());
     eventBus.on('upgrade:purchased', () => this.renderSuppliers());
+
+    void setInterval(() => this.updateCooldownTimers(), 500);
   }
 
   render(): void {
@@ -78,8 +90,93 @@ export class MarketStall {
     this.hasAnimatedEntrance = true;
   }
 
+  private formatCooldown(seconds: number): string {
+    if (seconds >= 60) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return s > 0 ? `${m}m ${s}s` : `${m}m`;
+    }
+    return `${seconds}s`;
+  }
+
+  private updateCooldownTimers(): void {
+    let anyExpired = false;
+    for (const goodsId of this.cooldownGoodsIds) {
+      const remaining = gameState.getCooldownRemaining(goodsId);
+      if (remaining <= 0) {
+        anyExpired = true;
+        this.cooldownGoodsIds.delete(goodsId);
+      }
+    }
+    if (anyExpired) {
+      this.renderSuppliers();
+    }
+  }
+
+  private buildSupplierCard(goods: GoodsDefinition, actionLabel: string, onClick: () => void): HTMLElement {
+    const cost = calculateBuyPrice(goods.id, gameState.currentTier);
+    const canAfford = gameState.coins >= cost;
+    const hasSpace = gameState.inventory.length < gameState.stallSlots;
+    const onCooldown = gameState.isOnCooldown(goods.id);
+    const available = canAfford && hasSpace && !onCooldown;
+    const displayTier = goods.tier + 1;
+    const effectiveCooldown = gameState.getEffectiveCooldown(goods.id);
+
+    const card = document.createElement('div');
+    card.className = `goods-card${onCooldown ? ' goods-card--cooldown' : ''}`;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `${actionLabel} ${goods.name} for ${cost} gold`);
+    if (!onCooldown) {
+      card.style.opacity = available ? '1' : '0.5';
+    }
+
+    card.innerHTML = `
+      <div class="goods-card__tier-badge">T${displayTier}</div>
+      <div class="goods-card__cd-badge">🕐 ${this.formatCooldown(effectiveCooldown)}</div>
+      <div class="goods-card__icon">${goods.icon}</div>
+      <div class="goods-card__name">${goods.name}</div>
+      <div class="goods-card__price">${cost} 🪙</div>
+    `;
+
+    if (onCooldown) {
+      const remaining = gameState.getCooldownRemaining(goods.id);
+      const pct = Math.min(100, (remaining / effectiveCooldown) * 100);
+      const overlay = document.createElement('div');
+      overlay.className = 'goods-card__cooldown-overlay';
+      overlay.style.height = `${pct}%`;
+      card.appendChild(overlay);
+      requestAnimationFrame(() => {
+        overlay.style.transition = `height ${remaining}s linear`;
+        overlay.style.height = '0%';
+      });
+      this.cooldownGoodsIds.add(goods.id);
+    }
+
+    if (available) {
+      card.addEventListener('click', onClick);
+    }
+
+    card.addEventListener('mouseenter', () => {
+      let statusText = '';
+      if (onCooldown) statusText = `<span style="color: var(--accent-bright)">On cooldown: ${this.formatCooldown(gameState.getCooldownRemaining(goods.id))}</span><br>`;
+      else if (!canAfford) statusText = '<span style="color: var(--accent-bright)">Not enough gold!</span><br>';
+      else if (!hasSpace) statusText = '<span style="color: var(--accent-bright)">Stall full!</span><br>';
+      showTooltip(card, `
+        <strong style="color: var(--gold)">${goods.name}</strong> <span style="color: var(--ink-dim);">(Tier ${displayTier})</span><br>
+        ${goods.description}<br>
+        Cost: ${cost} 🪙 | Cooldown: ${this.formatCooldown(effectiveCooldown)}<br>
+        ${statusText}
+      `);
+    });
+    card.addEventListener('mouseleave', hideTooltip);
+
+    return card;
+  }
+
   private renderSuppliers(): void {
     this.supplierEl.innerHTML = '';
+    this.cooldownGoodsIds.clear();
 
     // Craftable goods section
     const craftPanel = document.createElement('div');
@@ -90,43 +187,12 @@ export class MarketStall {
 
     const craftable = getCraftableGoods(gameState.currentTier, [...gameState.data.unlockedRecipes]);
     for (const goods of craftable) {
-      const cost = calculateBuyPrice(goods.id, gameState.currentTier);
-      const canAfford = gameState.coins >= cost;
-      const hasSpace = gameState.inventory.length < gameState.stallSlots;
-
-      const card = document.createElement('div');
-      card.className = 'goods-card';
-      card.setAttribute('role', 'button');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', `Craft ${goods.name} for ${cost} gold`);
-      card.style.opacity = canAfford && hasSpace ? '1' : '0.5';
-      card.innerHTML = `
-        <div class="goods-card__icon">${goods.icon}</div>
-        <div class="goods-card__name">${goods.name}</div>
-        <div class="goods-card__price">${cost} 🪙</div>
-      `;
-
-      if (canAfford && hasSpace) {
-        card.addEventListener('click', () => this.startCrafting(goods));
-      }
-
-      card.addEventListener('mouseenter', () => {
-        showTooltip(card, `
-          <strong style="color: var(--gold)">${goods.name}</strong><br>
-          ${goods.description}<br>
-          Material cost: ${cost} 🪙<br>
-          ${!canAfford ? '<span style="color: var(--accent-bright)">Not enough gold!</span>' : ''}
-          ${!hasSpace ? '<span style="color: var(--accent-bright)">Stall full!</span>' : ''}
-        `);
-      });
-      card.addEventListener('mouseleave', hideTooltip);
-
-      craftGrid.appendChild(card);
+      craftGrid.appendChild(this.buildSupplierCard(goods, 'Craft', () => this.startCrafting(goods)));
     }
     craftPanel.appendChild(craftGrid);
     this.supplierEl.appendChild(craftPanel);
 
-    // Buyable goods section (no crafting needed)
+    // Buyable goods section
     const buyPanel = document.createElement('div');
     buyPanel.className = 'panel';
     buyPanel.innerHTML = `<div class="panel-header"><h3>🏪 Buy Goods</h3></div>`;
@@ -135,36 +201,7 @@ export class MarketStall {
 
     const buyable = getBuyableGoods(gameState.currentTier);
     for (const goods of buyable) {
-      const cost = calculateBuyPrice(goods.id, gameState.currentTier);
-      const canAfford = gameState.coins >= cost;
-      const hasSpace = gameState.inventory.length < gameState.stallSlots;
-
-      const card = document.createElement('div');
-      card.className = 'goods-card';
-      card.setAttribute('role', 'button');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', `Buy ${goods.name} for ${cost} gold`);
-      card.style.opacity = canAfford && hasSpace ? '1' : '0.5';
-      card.innerHTML = `
-        <div class="goods-card__icon">${goods.icon}</div>
-        <div class="goods-card__name">${goods.name}</div>
-        <div class="goods-card__price">${cost} 🪙</div>
-      `;
-
-      if (canAfford && hasSpace) {
-        card.addEventListener('click', () => this.buyGoods(goods));
-      }
-
-      card.addEventListener('mouseenter', () => {
-        showTooltip(card, `
-          <strong style="color: var(--gold)">${goods.name}</strong><br>
-          ${goods.description}<br>
-          Cost: ${cost} 🪙
-        `);
-      });
-      card.addEventListener('mouseleave', hideTooltip);
-
-      buyGrid.appendChild(card);
+      buyGrid.appendChild(this.buildSupplierCard(goods, 'Buy', () => this.buyGoods(goods)));
     }
     buyPanel.appendChild(buyGrid);
     this.supplierEl.appendChild(buyPanel);
@@ -173,13 +210,29 @@ export class MarketStall {
   private renderStall(): void {
     this.stallEl.innerHTML = '';
 
+    const cust = this.selectedCustomer;
+
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.innerHTML = `
-      <div class="panel-header">
-        <h3>🏪 Your Stall <span style="font-size: 0.8rem; color: var(--ink-dim);">(${gameState.inventory.length}/${gameState.stallSlots} slots)</span></h3>
-      </div>
-    `;
+
+    let headerExtra = `<span style="font-size: 0.8rem; color: var(--ink-dim);">(${gameState.inventory.length}/${gameState.stallSlots} slots)</span>`;
+    if (cust) {
+      headerExtra += `<span style="font-size: 0.8rem; color: var(--gold); margin-left: 8px;">— Selling to ${cust.icon} ${cust.name}</span>`;
+    }
+    panel.innerHTML = `<div class="panel-header"><h3>🏪 Your Stall ${headerExtra}</h3></div>`;
+
+    if (cust) {
+      const deselectBtn = document.createElement('button');
+      deselectBtn.className = 'btn btn-subtle';
+      deselectBtn.style.cssText = 'font-size: 0.75rem; padding: 2px 10px; margin-bottom: 8px;';
+      deselectBtn.textContent = '✕ Cancel selection';
+      deselectBtn.addEventListener('click', () => {
+        this.selectedCustomer = null;
+        this.updateCustomerHighlight();
+        this.renderStall();
+      });
+      panel.appendChild(deselectBtn);
+    }
 
     const grid = document.createElement('div');
     grid.className = `goods-grid${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
@@ -192,36 +245,65 @@ export class MarketStall {
         if (!goods) continue;
 
         const qualityLabel = QUALITY_LABELS[Math.min(item.quality, QUALITY_LABELS.length - 1)];
+        const isDesired = cust ? cust.desiredCategory === goods.category : false;
+        const isRefused = cust ? cust.refusedCategory === goods.category : false;
         const card = document.createElement('div');
-        card.className = `goods-card${item.enchanted ? ' goods-card--enchanted' : ''}`;
+        card.className = `goods-card${item.enchanted ? ' goods-card--enchanted' : ''}${cust ? ' goods-card--sellable' : ''}`;
+
+        let priceHtml = `<div class="goods-card__price">~${Math.round(item.basePrice * (item.enchanted ? item.enchantMultiplier : 1))} 🪙</div>`;
+        if (cust) {
+          const priceCalc = calculateSellPrice(item, cust);
+          const prefTag = isDesired
+            ? '<div style="color: var(--green-bright, #4ade80); font-size: 0.75rem;">★ Desired</div>'
+            : isRefused
+            ? '<div style="color: var(--accent-bright); font-size: 0.75rem;">✕ Refused</div>'
+            : '<div style="color: var(--ink-dim); font-size: 0.75rem;">— Neutral</div>';
+          priceHtml = `
+            <div class="goods-card__price" style="color: ${isRefused ? 'var(--accent-bright)' : 'var(--gold)'};">~${priceCalc.finalPrice} 🪙</div>
+            ${prefTag}
+          `;
+        }
+
         card.innerHTML = `
           <div class="goods-card__icon">${goods.icon}</div>
           <div class="goods-card__name">${goods.name}</div>
           <div class="goods-card__quality" style="color: ${item.quality >= 3 ? 'var(--gold)' : item.quality >= 2 ? 'var(--green-bright)' : 'var(--ink-dim)'}">${qualityLabel}</div>
           ${item.enchanted ? '<div style="color: var(--blue-bright); font-size: 0.75rem;">✨ Enchanted x' + item.enchantMultiplier.toFixed(1) + '</div>' : ''}
-          <div class="goods-card__price">~${Math.round(item.basePrice * (item.enchanted ? item.enchantMultiplier : 1))} 🪙</div>
+          ${priceHtml}
         `;
 
-        // Enchant button if not already enchanted
-        if (!item.enchanted) {
-          const enchantBtn = document.createElement('button');
-          enchantBtn.className = 'btn btn-subtle';
-          enchantBtn.style.cssText = 'font-size: 0.75rem; padding: 2px 8px; margin-top: 4px;';
-          enchantBtn.textContent = '✨ Enchant';
-          enchantBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.startEnchanting(item);
+        if (cust) {
+          if (isDesired) {
+            card.style.border = '2px solid var(--green-bright, #4ade80)';
+          } else if (isRefused) {
+            card.style.border = '2px solid var(--accent-bright)';
+            card.style.opacity = '0.75';
+          }
+          card.addEventListener('click', () => {
+            this.doHaggle(cust, item);
           });
-          card.appendChild(enchantBtn);
+        } else {
+          if (!item.enchanted) {
+            const enchantBtn = document.createElement('button');
+            enchantBtn.className = 'btn btn-subtle';
+            enchantBtn.style.cssText = 'font-size: 0.75rem; padding: 2px 8px; margin-top: 4px;';
+            enchantBtn.textContent = '✨ Enchant';
+            enchantBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.startEnchanting(item);
+            });
+            card.appendChild(enchantBtn);
+          }
         }
 
         card.addEventListener('mouseenter', () => {
-          showTooltip(card, `
-            <strong style="color: var(--gold)">${goods.name}</strong><br>
-            Quality: ${qualityLabel}<br>
-            ${item.enchanted ? `Enchanted: x${item.enchantMultiplier.toFixed(1)}<br>` : ''}
-            Click a customer to sell this item.
-          `);
+          const prefTip = isDesired ? '<span style="color: var(--green-bright, #4ade80);">★ Desired item!</span><br>'
+            : isRefused ? '<span style="color: var(--accent-bright);">✕ Refused — pays much less</span><br>'
+            : '';
+          const tooltipText = cust
+            ? `<strong style="color: var(--gold)">${goods.name}</strong><br>Quality: ${qualityLabel}<br>${item.enchanted ? `Enchanted: x${item.enchantMultiplier.toFixed(1)}<br>` : ''}${prefTip}Click to sell to ${cust.name}`
+            : `<strong style="color: var(--gold)">${goods.name}</strong><br>Quality: ${qualityLabel}<br>${item.enchanted ? `Enchanted: x${item.enchantMultiplier.toFixed(1)}<br>` : ''}Select a customer to sell this item.`;
+          showTooltip(card, tooltipText);
         });
         card.addEventListener('mouseleave', hideTooltip);
 
@@ -231,6 +313,12 @@ export class MarketStall {
 
     panel.appendChild(grid);
     this.stallEl.appendChild(panel);
+  }
+
+  private updateCustomerHighlight(): void {
+    for (const [id, card] of this.customerCardMap) {
+      card.classList.toggle('customer-card--selected', this.selectedCustomer?.id === id);
+    }
   }
 
   private customerTimerInterval: ReturnType<typeof setInterval> | null = null;
@@ -307,17 +395,29 @@ export class MarketStall {
       : customer.haggleSkill < 0.66 ? 'var(--gold-dim)'
       : 'var(--accent-bright)';
 
+    const budgetLabel = customer.budgetMultiplier >= 1.5 ? 'Deep Pockets'
+      : customer.budgetMultiplier >= 1.2 ? 'Generous'
+      : customer.budgetMultiplier >= 1.0 ? 'Fair'
+      : 'Stingy';
+    const budgetColor = customer.budgetMultiplier >= 1.5 ? 'var(--gold)'
+      : customer.budgetMultiplier >= 1.2 ? 'var(--green-bright, #4ade80)'
+      : customer.budgetMultiplier >= 1.0 ? 'var(--ink-dim)'
+      : 'var(--accent-bright)';
+
     card.innerHTML = `
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
         <div class="customer-card__name">${customer.name}</div>
         <div class="customer-card__desire">Wants: <span style="text-transform: uppercase; color: var(--gold); font-family: var(--font-display); letter-spacing: 0.5px;">${customer.desiredCategory}</span></div>
-        <div style="font-size: 0.75rem; color: ${haggleColor};">🎲 ${haggleLabel}</div>
+        <div style="font-size: 0.75rem; display: flex; gap: 8px;">
+          <span style="color: ${haggleColor};">🎲 ${haggleLabel}</span>
+          <span style="color: ${budgetColor};">💰 ${budgetLabel}</span>
+        </div>
         <div class="patience-bar" style="margin-top: 4px; height: 3px; background: var(--parchment-lighter); border-radius: 2px; overflow: hidden;">
           <div class="patience-bar__fill" style="height: 100%; background: var(--gold-dim); border-radius: 2px; transition: width 1s linear; width: 100%;"></div>
         </div>
       </div>
-      <div style="color: var(--gold-dim); font-size: 0.8rem; align-self: center;">Sell ➜</div>
+      <div style="color: var(--gold-dim); font-size: 0.8rem; align-self: center;">Select</div>
     `;
 
     card.style.cursor = 'pointer';
@@ -330,7 +430,8 @@ export class MarketStall {
         <strong style="color: var(--gold)">${customer.name}</strong> the ${customer.type}<br>
         Wants: <span style="text-transform: uppercase; color: var(--gold);">${customer.desiredCategory}</span><br>
         Haggle skill: ${Math.round(customer.haggleSkill * 100)}%<br>
-        Budget: ${customer.budgetMultiplier > 1 ? 'Generous' : customer.budgetMultiplier < 1 ? 'Cheap' : 'Normal'}
+        Budget: ${customer.budgetMultiplier > 1 ? 'Generous' : customer.budgetMultiplier < 1 ? 'Cheap' : 'Normal'}<br>
+        <span style="color: var(--ink-dim);">Click to select, then choose an item from your stall.</span>
       `);
     });
     card.addEventListener('mouseleave', hideTooltip);
@@ -372,7 +473,6 @@ export class MarketStall {
       forge.destroy();
       eventBus.emit('minigame:completed', { type: 'forge', score: result.score });
 
-      // Arcane Anvil: 25% chance forged items start enchanted
       const arcaneProc = gameState.hasUpgrade('arcane_anvil') && Math.random() < 0.25;
       const item: InventoryItem = {
         id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -385,6 +485,7 @@ export class MarketStall {
 
       gameState.addToInventory(item);
       gameState.recordCraft();
+      gameState.startCooldown(goods.id, goods.cooldown);
 
       this.hideOverlay();
       this.render();
@@ -399,7 +500,6 @@ export class MarketStall {
     const cost = calculateBuyPrice(goods.id, gameState.currentTier);
     if (!gameState.spendCoins(cost, goods.name)) return;
 
-    // Appraisal minigame for bought goods
     eventBus.emit('minigame:started', { type: 'appraisal' });
     this.showOverlay();
 
@@ -420,6 +520,7 @@ export class MarketStall {
       };
 
       gameState.addToInventory(item);
+      gameState.startCooldown(goods.id, goods.cooldown);
       this.hideOverlay();
       this.render();
       checkMilestones();
@@ -454,66 +555,18 @@ export class MarketStall {
   }
 
   private startSale(customer: Customer): void {
-    this.showOverlay();
-
-    if (gameState.inventory.length === 0) {
-      this.minigameContainer.innerHTML = `
-        <div style="text-align: center; padding: 24px;">
-          <p style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem; margin-bottom: 16px;">
-            ${customer.icon} ${customer.name} is browsing...
-          </p>
-          <p style="color: var(--ink-dim); margin-bottom: 20px;">You have no items to sell! Buy or craft some goods first.</p>
-          <button class="btn btn-gold close-btn">Back to Market</button>
-        </div>
-      `;
-      this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => this.hideOverlay());
-      return;
+    if (this.selectedCustomer?.id === customer.id) {
+      this.selectedCustomer = null;
+    } else {
+      this.selectedCustomer = customer;
     }
-
-    this.minigameContainer.innerHTML = `
-      <h2 class="minigame-container__title">Select an item to sell to ${customer.icon} ${customer.name}</h2>
-      <div class="goods-grid" id="sale-items"></div>
-    `;
-
-    const grid = this.minigameContainer.querySelector('#sale-items')!;
-    for (const item of gameState.inventory) {
-      const goods = getGoodsById(item.goodsId);
-      if (!goods) continue;
-
-      const priceCalc = calculateSellPrice(item, customer);
-      const qualityLabel = QUALITY_LABELS[Math.min(item.quality, QUALITY_LABELS.length - 1)];
-      const isDesired = customer.desiredCategory === goods.category;
-
-      const card = document.createElement('div');
-      card.className = 'goods-card';
-      card.style.border = isDesired ? '2px solid var(--gold-dim)' : '';
-      card.innerHTML = `
-        <div class="goods-card__icon">${goods.icon}</div>
-        <div class="goods-card__name">${goods.name}</div>
-        <div class="goods-card__quality">${qualityLabel}</div>
-        <div class="goods-card__price">~${priceCalc.finalPrice} 🪙</div>
-        ${isDesired ? '<div style="color: var(--gold); font-size: 0.7rem;">★ Desired!</div>' : ''}
-      `;
-
-      card.addEventListener('click', () => {
-        this.doHaggle(customer, item);
-      });
-
-      grid.appendChild(card);
-    }
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-subtle';
-    cancelBtn.style.marginTop = '16px';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => {
-      this.hideOverlay();
-    });
-    this.minigameContainer.appendChild(cancelBtn);
+    this.updateCustomerHighlight();
+    this.renderStall();
   }
 
   private doHaggle(customer: Customer, item: InventoryItem): void {
     eventBus.emit('minigame:started', { type: 'haggle' });
+    this.showOverlay();
 
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">🎲 Haggling with ${customer.icon} ${customer.name}</h2><div id="haggle-area"></div>`;
 
@@ -531,6 +584,7 @@ export class MarketStall {
       gameState.recordHaggle(won);
       awardReputation(item.quality, won);
 
+      this.selectedCustomer = null;
       customerQueue.removeCustomer(customer.id);
       eventBus.emit('item:sold', { itemId: item.id, price: priceCalc.finalPrice, customerId: customer.id });
       eventBus.emit('customer:left', { customerId: customer.id, satisfied: true });

@@ -73,6 +73,15 @@ export const UPGRADES: UpgradeDefinition[] = [
     effect: () => gameState.addUpgrade('keen_eye'),
     icon: '👁️',
   },
+  {
+    id: 'quick_hands',
+    name: 'Quick Hands',
+    description: '-25% cooldown on Tier 1-2 items.',
+    cost: 90,
+    tier: 0,
+    effect: () => gameState.addUpgrade('quick_hands'),
+    icon: '🤲',
+  },
   // Tier 1 upgrades
   {
     id: 'forge_bellows',
@@ -112,6 +121,15 @@ export const UPGRADES: UpgradeDefinition[] = [
   },
   // Tier 2 upgrades
   {
+    id: 'efficient_workshop',
+    name: 'Efficient Workshop',
+    description: '-20% cooldown on all forged items.',
+    cost: 800,
+    tier: 2,
+    effect: () => gameState.addUpgrade('efficient_workshop'),
+    icon: '🏭',
+  },
+  {
     id: 'merchant_guild',
     name: 'Merchant Guild Card',
     description: 'Reduces material costs by 10%.',
@@ -121,6 +139,15 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: '📜',
   },
   // Tier 3 upgrades
+  {
+    id: 'supply_chain',
+    name: 'Supply Chain',
+    description: '-20% cooldown on all bought goods.',
+    cost: 2000,
+    tier: 3,
+    effect: () => gameState.addUpgrade('supply_chain'),
+    icon: '📦',
+  },
   {
     id: 'enchant_table',
     name: 'Enchanting Table',
@@ -141,6 +168,15 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: '⚒️',
   },
   // Tier 5 upgrades
+  {
+    id: 'master_supplier',
+    name: 'Master Supplier',
+    description: '-25% cooldown on all items.',
+    cost: 18000,
+    tier: 5,
+    effect: () => gameState.addUpgrade('master_supplier'),
+    icon: '🚀',
+  },
   {
     id: 'royal_charter',
     name: 'Royal Charter',
