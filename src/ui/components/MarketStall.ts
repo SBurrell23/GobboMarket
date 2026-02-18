@@ -296,11 +296,19 @@ export class MarketStall {
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Sell to ${customer.name} the ${customer.type}, wants ${customer.desiredCategory}`);
 
+    const haggleLabel = customer.haggleSkill < 0.33 ? 'Poor Haggler'
+      : customer.haggleSkill < 0.66 ? 'Moderate Haggler'
+      : 'Tough Haggler';
+    const haggleColor = customer.haggleSkill < 0.33 ? 'var(--green-bright, #4ade80)'
+      : customer.haggleSkill < 0.66 ? 'var(--gold-dim)'
+      : 'var(--accent-bright)';
+
     card.innerHTML = `
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
         <div class="customer-card__name">${customer.name}</div>
         <div class="customer-card__desire">Wants: ${customer.desiredCategory}</div>
+        <div style="font-size: 0.75rem; color: ${haggleColor};">🎲 ${haggleLabel}</div>
         <div class="patience-bar" style="margin-top: 4px; height: 3px; background: var(--parchment-lighter); border-radius: 2px; overflow: hidden;">
           <div class="patience-bar__fill" style="height: 100%; background: var(--gold-dim); border-radius: 2px; transition: width 1s linear; width: 100%;"></div>
         </div>
@@ -629,7 +637,7 @@ export class MarketStall {
     toast.className = 'sale-toast';
     toast.textContent = `+${amount.toLocaleString()} 🪙`;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2100);
+    setTimeout(() => toast.remove(), 2750);
   }
 
   private showOverlay(): void {
@@ -638,7 +646,12 @@ export class MarketStall {
   }
 
   private hideOverlay(): void {
+    this.overlayEl.classList.add('closing');
     this.overlayEl.classList.remove('active');
+    this.minigameContainer.innerHTML = '';
+    requestAnimationFrame(() => {
+      this.overlayEl.classList.remove('closing');
+    });
   }
 
   get element(): HTMLElement {

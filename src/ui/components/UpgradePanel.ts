@@ -13,7 +13,7 @@ export class UpgradePanel {
 
   constructor(parent: HTMLElement) {
     this.el = document.createElement('div');
-    this.el.style.cssText = 'display: flex; flex-direction: column; gap: 16px; padding: 0;';
+    this.el.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 0;';
     parent.appendChild(this.el);
 
     this.render();
@@ -28,25 +28,33 @@ export class UpgradePanel {
   render(): void {
     this.el.innerHTML = '';
 
-    // Status panel
+    // Top row: Status (full width)
     this.renderStatus();
 
-    // Tier progress
-    this.renderTierProgress();
+    // Left column: Tier progress
+    const leftCol = document.createElement('div');
+    leftCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+    this.el.appendChild(leftCol);
+    this.renderTierProgress(leftCol);
 
-    // Upgrades
-    this.renderUpgrades();
+    // Right column: Upgrades + Recipes stacked
+    const rightCol = document.createElement('div');
+    rightCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+    this.el.appendChild(rightCol);
+    this.renderUpgrades(rightCol);
+    this.renderRecipes(rightCol);
 
-    // Recipes
-    this.renderRecipes();
-
-    // Milestones
+    // Bottom row: Milestones (full width)
     this.renderMilestones();
+
+    // Reset button (full width)
+    this.renderResetButton();
   }
 
   private renderStatus(): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
+    panel.style.gridColumn = '1 / -1';
     const tierInfo = getTierInfo(gameState.currentTier);
 
     // Next tier progress
@@ -57,25 +65,32 @@ export class UpgradePanel {
       const coinPct = Math.min(100, (gameState.coins / TIER_THRESHOLDS[nextTier]) * 100);
       const repPct = Math.min(100, (gameState.reputation / TIER_REPUTATION_REQUIRED[nextTier]) * 100);
       const nextName = getTierInfo(nextTier).name;
+      const coinsMet = gameState.coins >= TIER_THRESHOLDS[nextTier];
+      const repMet = gameState.reputation >= TIER_REPUTATION_REQUIRED[nextTier];
+      const coinCheck = coinsMet ? '✅' : '⬜';
+      const repCheck = repMet ? '✅' : '⬜';
+      const coinBarColor = coinsMet ? 'var(--green-bright, #4ade80)' : 'var(--gold-dim)';
+      const repBarColor = repMet ? 'var(--green-bright, #4ade80)' : 'var(--green)';
       nextTierHtml = `
         <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--parchment-lighter);">
-          <div style="font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 6px;">Progress to <span style="color: var(--gold);">${nextName}</span></div>
+          <div style="font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 4px;">Progress to <span style="color: var(--gold);">${nextName}</span></div>
+          <div style="font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 8px; font-style: italic;">Both requirements must be met to unlock</div>
           <div style="margin-bottom: 4px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--ink-dim);">
-              <span>🪙 Coins</span>
+              <span>${coinCheck} 🪙 Coins</span>
               <span>${gameState.coins.toLocaleString()} / ${TIER_THRESHOLDS[nextTier].toLocaleString()}</span>
             </div>
             <div style="height: 6px; background: var(--parchment-lighter); border-radius: 3px; overflow: hidden; margin-top: 2px;">
-              <div style="height: 100%; background: var(--gold-dim); border-radius: 3px; width: ${coinPct}%; transition: width 0.3s ease;"></div>
+              <div style="height: 100%; background: ${coinBarColor}; border-radius: 3px; width: ${coinPct}%; transition: width 0.3s ease;"></div>
             </div>
           </div>
           <div>
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--ink-dim);">
-              <span>⭐ Reputation</span>
+              <span>${repCheck} ⭐ Reputation</span>
               <span>${gameState.reputation} / ${TIER_REPUTATION_REQUIRED[nextTier]}</span>
             </div>
             <div style="height: 6px; background: var(--parchment-lighter); border-radius: 3px; overflow: hidden; margin-top: 2px;">
-              <div style="height: 100%; background: var(--green); border-radius: 3px; width: ${repPct}%; transition: width 0.3s ease;"></div>
+              <div style="height: 100%; background: ${repBarColor}; border-radius: 3px; width: ${repPct}%; transition: width 0.3s ease;"></div>
             </div>
           </div>
         </div>
@@ -117,7 +132,7 @@ export class UpgradePanel {
     this.el.appendChild(panel);
   }
 
-  private renderTierProgress(): void {
+  private renderTierProgress(target: HTMLElement): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
     panel.innerHTML = `<div class="panel-header"><h3>🗺️ Market Tiers</h3></div>`;
@@ -150,10 +165,10 @@ export class UpgradePanel {
     }
 
     panel.appendChild(list);
-    this.el.appendChild(panel);
+    target.appendChild(panel);
   }
 
-  private renderUpgrades(): void {
+  private renderUpgrades(target: HTMLElement): void {
     const upgrades = getAvailableUpgrades();
     if (upgrades.length === 0) return;
 
@@ -199,10 +214,10 @@ export class UpgradePanel {
     }
 
     panel.appendChild(list);
-    this.el.appendChild(panel);
+    target.appendChild(panel);
   }
 
-  private renderRecipes(): void {
+  private renderRecipes(target: HTMLElement): void {
     const recipes = getAvailableRecipes();
     if (recipes.length === 0) return;
 
@@ -244,7 +259,7 @@ export class UpgradePanel {
     }
 
     panel.appendChild(list);
-    this.el.appendChild(panel);
+    target.appendChild(panel);
   }
 
   private renderMilestones(): void {
@@ -253,36 +268,40 @@ export class UpgradePanel {
 
     const panel = document.createElement('div');
     panel.className = 'panel';
+    panel.style.gridColumn = '1 / -1';
     panel.innerHTML = `<div class="panel-header"><h3>🏆 Milestones (${completed.length}/${all.length})</h3></div>`;
 
-    const list = document.createElement('div');
-    list.style.cssText = 'display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto;';
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;';
 
     for (const m of all) {
       const done = completed.some(c => c.id === m.id);
-      const item = document.createElement('div');
-      item.style.cssText = `
-        display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+      const card = document.createElement('div');
+      card.style.cssText = `
+        display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
         font-size: 0.85rem; opacity: ${done ? '1' : '0.4'};
+        background: ${done ? 'var(--parchment-light)' : 'transparent'};
+        border: 1px solid ${done ? 'var(--gold-dim)' : 'var(--parchment-lighter)'};
+        border-radius: 4px;
       `;
-      item.innerHTML = `
-        <span>${done ? m.icon : '🔒'}</span>
-        <span style="color: ${done ? 'var(--gold)' : 'var(--ink-dim)'};">${m.name}</span>
+      card.innerHTML = `
+        <span style="flex-shrink: 0; font-size: 1.1rem; line-height: 1.2;">${done ? m.icon : '🔒'}</span>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+          <span style="color: ${done ? 'var(--gold)' : 'var(--ink-dim)'}; font-family: var(--font-display); font-size: 0.85rem;">${m.name}</span>
+          <span style="color: var(--ink-dim); font-size: 0.72rem; line-height: 1.3;">${m.description}</span>
+        </div>
       `;
-      list.appendChild(item);
+      grid.appendChild(card);
     }
 
-    panel.appendChild(list);
+    panel.appendChild(grid);
     this.el.appendChild(panel);
-
-    // New Game section
-    this.renderResetButton();
   }
 
   private renderResetButton(): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.style.cssText = 'text-align: center; margin-top: 8px;';
+    panel.style.cssText = 'text-align: center; margin-top: 8px; grid-column: 1 / -1;';
     panel.innerHTML = `
       <button class="btn btn-red" id="reset-game-btn" style="font-size: 0.85rem; padding: 6px 16px;">
         🗑️ Reset Game

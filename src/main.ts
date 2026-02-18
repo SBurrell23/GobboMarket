@@ -51,16 +51,6 @@ function startGame(app: HTMLElement): void {
   updateTierDisplay(tierEl);
   stats.appendChild(tierEl);
 
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn btn-subtle';
-  saveBtn.textContent = '💾 Save';
-  saveBtn.addEventListener('click', () => {
-    saveSystem.save();
-    saveBtn.textContent = '✓ Saved!';
-    setTimeout(() => { saveBtn.textContent = '💾 Save'; }, 1500);
-  });
-  stats.appendChild(saveBtn);
-
   header.appendChild(titleEl);
   header.appendChild(stats);
   app.appendChild(header);
@@ -72,6 +62,7 @@ function startGame(app: HTMLElement): void {
   const screens: { name: ScreenName; label: string }[] = [
     { name: 'market', label: '🏪 Market' },
     { name: 'upgrades', label: '⬆️ Upgrades & Progress' },
+    { name: 'help', label: '❓ Help' },
   ];
 
   for (const s of screens) {
@@ -99,9 +90,15 @@ function startGame(app: HTMLElement): void {
 
   // Upgrades screen
   const upgradeScreen = document.createElement('div');
-  upgradeScreen.style.cssText = 'padding: 0; max-width: 800px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  upgradeScreen.style.cssText = 'padding: 0 12px; max-width: 1100px; margin: 0 auto; overflow-y: auto; height: 100%;';
   new UpgradePanel(upgradeScreen);
   screenManager.register('upgrades', upgradeScreen);
+
+  // Help screen
+  const helpScreen = document.createElement('div');
+  helpScreen.style.cssText = 'padding: 16px 12px; max-width: 900px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  helpScreen.innerHTML = buildHelpContent();
+  screenManager.register('help', helpScreen);
 
   // Show initial screen
   screenManager.show('market');
@@ -116,8 +113,8 @@ function startGame(app: HTMLElement): void {
   // Start customer queue
   customerQueue.start();
 
-  // Setup auto-save
-  const cancelAutoSave = saveSystem.autoSaveInterval(30_000);
+  // Auto-save whenever coins change
+  eventBus.on('coins:changed', () => saveSystem.save());
 
   // Update header displays on changes
   eventBus.on('reputation:changed', () => updateRepDisplay(repEl));
@@ -139,7 +136,6 @@ function startGame(app: HTMLElement): void {
 
   // Suppress unused variable warnings
   void coinDisplay;
-  void cancelAutoSave;
 }
 
 function updateRepDisplay(el: HTMLElement): void {
@@ -179,6 +175,81 @@ function showTierNotification(tierName: string): void {
     notification.style.transition = 'opacity 0.5s ease';
     setTimeout(() => notification.remove(), 500);
   }, 3000);
+}
+
+function buildHelpContent(): string {
+  return `
+    <div style="display: flex; flex-direction: column; gap: 20px; color: var(--ink); font-size: 0.92rem; line-height: 1.6;">
+      <div class="panel">
+        <div class="panel-header"><h3>📖 How to Play</h3></div>
+        <p style="color: var(--ink-dim); margin-bottom: 8px;">
+          Welcome to <strong style="color: var(--gold);">Gobbo Market</strong> — a fantasy merchant game where you buy, craft, enchant, and sell goods to build your fortune. The goal is to reach <strong style="color: var(--gold);">1,000,000 gold coins</strong>!
+        </p>
+        <p style="color: var(--ink-dim);">
+          This is not an idle game — you'll need to play minigames and make strategic decisions to progress. Your game saves automatically whenever you earn or spend coins.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+        <div class="panel">
+          <div class="panel-header"><h3>🛒 Buying Goods</h3></div>
+          <p style="color: var(--ink-dim);">
+            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Appraisal minigame</strong> — a memory-match card game. Flip pairs of matching cards before time runs out. The more pairs you match, the higher the quality of the item you receive.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>⚒️ Crafting Items</h3></div>
+          <p style="color: var(--ink-dim);">
+            Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster!
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>✨ Enchanting</h3></div>
+          <p style="color: var(--ink-dim);">
+            Click an inventory item marked with ✨ to enchant it. This starts the <strong style="color: var(--gold);">Sliding Puzzle minigame</strong> — rearrange a 3×3 grid of rune tiles to match the target pattern before time runs out. Enchanted items sell for significantly more. You can finish early for partial credit.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>🎲 Selling & Haggling</h3></div>
+          <p style="color: var(--ink-dim);">
+            Customers appear in the queue with desires for specific item categories. Click a customer, choose an item to sell, then play the <strong style="color: var(--gold);">Haggle minigame</strong>. The customer rolls a d20 — you keep rolling d6s to try to beat their total. Settle any time for a medium deal, but roll a 1 and you get a bad deal!
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>📈 Progression</h3></div>
+          <p style="color: var(--ink-dim);">
+            Selling items earns you <strong style="color: var(--gold);">coins</strong> and <strong style="color: var(--gold);">reputation</strong>. Both are needed to unlock higher market tiers, which give access to better goods, new customer types, upgrades, and recipes. Check the Upgrades & Progress tab to see your requirements and buy upgrades that make minigames easier and profits higher.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>🏆 Milestones</h3></div>
+          <p style="color: var(--ink-dim);">
+            As you play, you'll unlock milestones for crafting, selling, earning gold, and reaching new market tiers. Track your progress on the Upgrades & Progress tab. Reach the final milestone — <strong style="color: var(--gold);">Goblin Tycoon</strong> — to win the game!
+          </p>
+        </div>
+
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>💡 Tips</h3></div>
+        <ul style="color: var(--ink-dim); padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+          <li>Buy early-game upgrades as soon as you can — they compound quickly.</li>
+          <li>Higher quality items sell for more, so practice the forge timing.</li>
+          <li>Enchanting an item before selling it can dramatically boost its price.</li>
+          <li>Don't be greedy in the haggle — settling for a medium deal beats busting!</li>
+          <li>Customers leave if you take too long, so serve them before they walk away.</li>
+          <li>Craft items when you can — crafted goods are free to make (you just need the recipe and materials cost).</li>
+          <li>Keep an eye on which categories customers want and stock up accordingly.</li>
+        </ul>
+      </div>
+    </div>
+  `;
 }
 
 // Boot the game

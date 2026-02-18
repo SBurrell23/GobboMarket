@@ -197,12 +197,16 @@
   z-index: 200;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 
 .minigame-overlay.active {
   opacity: 1;
   pointer-events: all;
+}
+
+.minigame-overlay.closing {
+  transition: none;
 }
 
 .minigame-container {

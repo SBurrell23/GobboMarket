@@ -64,21 +64,21 @@ describe('GameFlow Integration', () => {
     it('should advance tier when coins and reputation meet thresholds', () => {
       expect(gameState.currentTier).toBe(0);
 
-      // Tier 1 requires: 500 coins, 50 reputation
-      gameState.addCoins(500, 'test');
+      // Tier 1 requires: 150 coins, 15 reputation
+      gameState.addCoins(200, 'test');
       expect(gameState.currentTier).toBe(0); // Not yet - need reputation
 
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      gameState.addReputation(50);
+      gameState.addReputation(20);
 
       expect(gameState.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
     });
 
     it('should not unlock tier with only coins', () => {
-      gameState.addCoins(500, 'test');
+      gameState.addCoins(200, 'test');
       expect(gameState.currentTier).toBe(0);
     });
 

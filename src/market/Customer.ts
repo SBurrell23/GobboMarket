@@ -2,7 +2,6 @@ import {
   CUSTOMER_TYPES,
   CUSTOMER_ICONS,
   CUSTOMER_PATIENCE,
-  CUSTOMER_HAGGLE_SKILL,
   CUSTOMER_TIER_UNLOCK,
 } from '../core/constants.js';
 import type { GoodsDefinition } from './Goods.js';
@@ -54,6 +53,16 @@ function pickRandom<T>(arr: T[]): T {
 export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
   const names = NAME_POOLS[type] ?? HUMAN_NAMES;
   const prefs = CATEGORY_PREFERENCES[type] ?? ['weapon'];
+  const roll = Math.random();
+  let haggleSkill: number;
+  if (roll < 0.25) {
+    haggleSkill = 0.05 + Math.random() * 0.28;
+  } else if (roll < 0.75) {
+    haggleSkill = 0.33 + Math.random() * 0.33;
+  } else {
+    haggleSkill = 0.66 + Math.random() * 0.29;
+  }
+  haggleSkill = Math.round(haggleSkill * 100) / 100;
   return {
     id: `customer-${nextId++}`,
     type,
@@ -61,7 +70,7 @@ export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
     icon: CUSTOMER_ICONS[type] ?? '🧑',
     desiredCategory: pickRandom(prefs),
     patience: CUSTOMER_PATIENCE[type] ?? 5,
-    haggleSkill: CUSTOMER_HAGGLE_SKILL[type] ?? 0.5,
+    haggleSkill,
     budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'goblin' ? 0.8 : 1.0,
     arrivedAt: Date.now(),
   };

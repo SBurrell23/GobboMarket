@@ -98,6 +98,7 @@ class GameState {
     this.state.totalEarned += clamped;
     eventBus.emit('coins:earned', { amount: clamped, source });
     eventBus.emit('coins:changed', { amount: clamped, total: this.state.coins });
+    this.checkTierUnlock();
   }
 
   spendCoins(amount: number, item: string): boolean {
@@ -117,17 +118,22 @@ class GameState {
   }
 
   private checkTierUnlock(): void {
-    const nextTier = this.state.currentTier + 1;
-    if (nextTier >= TIER_NAMES.length) return;
-    if (
-      this.state.coins >= TIER_THRESHOLDS[nextTier] &&
-      this.state.reputation >= TIER_REPUTATION_REQUIRED[nextTier]
-    ) {
-      this.state.currentTier = nextTier;
-      eventBus.emit('tier:unlocked', {
-        tier: nextTier,
-        name: TIER_NAMES[nextTier],
-      });
+    let advanced = true;
+    while (advanced) {
+      advanced = false;
+      const nextTier = this.state.currentTier + 1;
+      if (nextTier >= TIER_NAMES.length) return;
+      if (
+        this.state.coins >= TIER_THRESHOLDS[nextTier] &&
+        this.state.reputation >= TIER_REPUTATION_REQUIRED[nextTier]
+      ) {
+        this.state.currentTier = nextTier;
+        eventBus.emit('tier:unlocked', {
+          tier: nextTier,
+          name: TIER_NAMES[nextTier],
+        });
+        advanced = true;
+      }
     }
   }
 

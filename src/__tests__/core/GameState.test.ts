@@ -89,15 +89,26 @@ describe('GameState', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      state.addCoins(500, 'test');
-      state.addReputation(50);
+      state.addCoins(200, 'test');
+      state.addReputation(20);
 
       expect(state.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
     });
 
-    it('should not unlock tier with only coins', () => {
+    it('should skip multiple tiers when thresholds are exceeded', () => {
+      const tierCb = vi.fn();
+      eventBus.on('tier:unlocked', tierCb);
+
       state.addCoins(500, 'test');
+      state.addReputation(50);
+
+      expect(state.currentTier).toBe(2);
+      expect(tierCb).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not unlock tier with only coins', () => {
+      state.addCoins(200, 'test');
       expect(state.currentTier).toBe(0);
     });
   });
