@@ -74,7 +74,7 @@ export class ForgeGame implements Minigame {
     // doesn't immediately trigger the first strike
     requestAnimationFrame(() => {
       if (!this.running) return;
-      document.addEventListener('click', this.handleClick);
+      document.addEventListener('mousedown', this.handleClick);
       document.addEventListener('keydown', this.handleKey);
     });
 
@@ -104,8 +104,16 @@ export class ForgeGame implements Minigame {
     this.waitingForStrike = false;
 
     const distance = Math.abs(this.meterPosition - this.sweetSpotCenter);
-    const halfWindow = this.sweetSpotWidth / 2;
-    const accuracy = distance <= halfWindow ? 1 - (distance / halfWindow) : 0;
+    const halfGreen = this.sweetSpotWidth / 2;
+    const halfYellow = this.sweetSpotWidth;
+    let accuracy: number;
+    if (distance <= halfGreen) {
+      accuracy = 1 - (distance / halfGreen) * 0.5;
+    } else if (distance <= halfYellow) {
+      accuracy = 0.5 * (1 - (distance - halfGreen) / (halfYellow - halfGreen));
+    } else {
+      accuracy = 0;
+    }
 
     this.strikes.push(accuracy);
     this.lastStrikeAccuracy = accuracy;
@@ -176,10 +184,10 @@ export class ForgeGame implements Minigame {
 
     // Anvil
     ctx.fillStyle = '#3d2e1c';
-    ctx.fillRect(220, 180, 160, 80);
+    ctx.fillRect(220, 200, 160, 80);
     ctx.fillStyle = '#555';
-    ctx.fillRect(230, 160, 140, 30);
-    ctx.fillRect(260, 140, 80, 25);
+    ctx.fillRect(230, 180, 140, 30);
+    ctx.fillRect(260, 160, 80, 25);
 
     // Meter bar background
     const barX = 50;
@@ -192,12 +200,22 @@ export class ForgeGame implements Minigame {
     ctx.fillRect(barX, barY, barW, barH);
     ctx.strokeRect(barX, barY, barW, barH);
 
-    // Sweet spot
+    // Yellow partial-hit zone (wider area behind the green zone)
+    const yellowWidth = this.sweetSpotWidth * 2;
+    const yellowStart = (this.sweetSpotCenter - yellowWidth / 2) * barW + barX;
+    const yellowW = yellowWidth * barW;
+    ctx.fillStyle = 'rgba(212, 168, 67, 0.25)';
+    ctx.fillRect(yellowStart, barY, yellowW, barH);
+    ctx.strokeStyle = 'rgba(212, 168, 67, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(yellowStart, barY, yellowW, barH);
+
+    // Sweet spot (green zone)
     const spotStart = (this.sweetSpotCenter - this.sweetSpotWidth / 2) * barW + barX;
     const spotW = this.sweetSpotWidth * barW;
-    ctx.fillStyle = 'rgba(212, 168, 67, 0.3)';
+    ctx.fillStyle = 'rgba(90, 180, 90, 0.4)';
     ctx.fillRect(spotStart, barY, spotW, barH);
-    ctx.strokeStyle = '#d4a843';
+    ctx.strokeStyle = '#5aab5a';
     ctx.lineWidth = 2;
     ctx.strokeRect(spotStart, barY, spotW, barH);
 
@@ -212,7 +230,7 @@ export class ForgeGame implements Minigame {
     ctx.font = '14px "Crimson Text", serif';
     ctx.textAlign = 'center';
     for (let i = 0; i < FORGE_STRIKES; i++) {
-      const cx = 200 + i * 100;
+      const cx = 250 + i * 100;
       const cy = 120;
       if (i < this.strikes.length) {
         const acc = this.strikes[i];
@@ -239,7 +257,7 @@ export class ForgeGame implements Minigame {
         const angle = (i / sparkCount) * Math.PI * 2;
         const dist = (1 - intensity) * 40 + 10;
         const sx = 300 + Math.cos(angle) * dist;
-        const sy = 165 + Math.sin(angle) * dist * 0.5;
+        const sy = 185 + Math.sin(angle) * dist * 0.5;
         ctx.fillStyle = `rgba(240, 200, 80, ${intensity})`;
         ctx.beginPath();
         ctx.arc(sx, sy, 2 + intensity * 3, 0, Math.PI * 2);
@@ -251,7 +269,7 @@ export class ForgeGame implements Minigame {
   destroy(): void {
     this.running = false;
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
-    document.removeEventListener('click', this.handleClick);
+    document.removeEventListener('mousedown', this.handleClick);
     document.removeEventListener('keydown', this.handleKey);
     if (this.container) this.container.innerHTML = '';
   }

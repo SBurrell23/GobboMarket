@@ -239,7 +239,7 @@ export class RuneCraftGame implements Minigame {
     this.container.innerHTML = '';
 
     const matchRatio = this.countMatches() / 9;
-    const multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER + this.tier * 0.1 : 1 + matchRatio * 0.3;
+    const multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER + this.tier * 0.1 : 1 + matchRatio * (RUNECRAFT_ENCHANT_MULTIPLIER - 1);
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'text-align: center; padding: 16px;';

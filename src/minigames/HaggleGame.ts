@@ -123,7 +123,7 @@ export class HaggleGame implements Minigame {
     this.playerTotal += roll;
 
     if (this.playerTotal >= this.customerRoll) {
-      this.renderPlayerTurn();
+      this.win();
     } else {
       this.renderPlayerTurn();
     }

@@ -61,7 +61,8 @@ function startGame(app: HTMLElement): void {
 
   const screens: { name: ScreenName; label: string }[] = [
     { name: 'market', label: '🏪 Market' },
-    { name: 'upgrades', label: '⬆️ Upgrades & Progress' },
+    { name: 'upgrades', label: '⬆️ Upgrades' },
+    { name: 'progress', label: '📈 Progress' },
     { name: 'help', label: '❓ Help' },
   ];
 
@@ -90,9 +91,15 @@ function startGame(app: HTMLElement): void {
 
   // Upgrades screen
   const upgradeScreen = document.createElement('div');
-  upgradeScreen.style.cssText = 'padding: 0 12px; max-width: 1100px; margin: 0 auto; overflow-y: auto; height: 100%;';
-  new UpgradePanel(upgradeScreen);
+  upgradeScreen.style.cssText = 'padding: 0 12px; max-width: 900px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  new UpgradePanel(upgradeScreen, 'upgrades');
   screenManager.register('upgrades', upgradeScreen);
+
+  // Progress screen
+  const progressScreen = document.createElement('div');
+  progressScreen.style.cssText = 'padding: 0 12px; max-width: 1100px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  new UpgradePanel(progressScreen, 'progress');
+  screenManager.register('progress', progressScreen);
 
   // Help screen
   const helpScreen = document.createElement('div');
@@ -167,7 +174,10 @@ function showTierNotification(tierName: string): void {
     </p>
     <p style="color: var(--gold-bright); font-size: 1.1rem;">${tierName}</p>
   `;
-  notification.classList.add('anim-slide-up');
+  notification.animate([
+    { opacity: 0, transform: 'translateX(-50%) translateY(20px)' },
+    { opacity: 1, transform: 'translateX(-50%) translateY(0)' },
+  ], { duration: 400, easing: 'ease', fill: 'forwards' });
   document.body.appendChild(notification);
 
   setTimeout(() => {
@@ -223,14 +233,14 @@ function buildHelpContent(): string {
         <div class="panel">
           <div class="panel-header"><h3>📈 Progression</h3></div>
           <p style="color: var(--ink-dim);">
-            Selling items earns you <strong style="color: var(--gold);">coins</strong> and <strong style="color: var(--gold);">reputation</strong>. Both are needed to unlock higher market tiers, which give access to better goods, new customer types, upgrades, and recipes. Check the Upgrades & Progress tab to see your requirements and buy upgrades that make minigames easier and profits higher.
+            Selling items earns you <strong style="color: var(--gold);">coins</strong> and <strong style="color: var(--gold);">reputation</strong>. Both are needed to unlock higher market tiers, which give access to better goods, new customer types, upgrades, and recipes. Check the Upgrades tab to buy upgrades and recipes, and the Progress tab to see your tier requirements and milestones.
           </p>
         </div>
 
         <div class="panel">
           <div class="panel-header"><h3>🏆 Milestones</h3></div>
           <p style="color: var(--ink-dim);">
-            As you play, you'll unlock milestones for crafting, selling, earning gold, and reaching new market tiers. Track your progress on the Upgrades & Progress tab. Reach the final milestone — <strong style="color: var(--gold);">Goblin Tycoon</strong> — to win the game!
+            As you play, you'll unlock milestones for crafting, selling, earning gold, and reaching new market tiers. Track your progress on the Progress tab. Reach the final milestone — <strong style="color: var(--gold);">Goblin Tycoon</strong> — to win the game!
           </p>
         </div>
 

@@ -34,8 +34,8 @@ const NAME_POOLS: Record<string, string[]> = {
 };
 
 const CATEGORY_PREFERENCES: Record<string, GoodsDefinition['category'][]> = {
-  goblin: ['weapon', 'food', 'trinket'],
-  human: ['weapon', 'armor', 'food'],
+  goblin: ['weapon', 'food', 'trinket', 'potion'],
+  human: ['weapon', 'armor', 'food', 'potion'],
   elf: ['potion', 'trinket', 'weapon'],
   dwarf: ['armor', 'weapon', 'food'],
   orc: ['weapon', 'food', 'armor'],

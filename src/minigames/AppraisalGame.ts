@@ -31,14 +31,13 @@ export class AppraisalGame implements Minigame {
   private container: HTMLElement | null = null;
   private tier: number;
   private cards: MemoryCard[] = [];
-  private flippedIndices: number[] = [];
+  private lastFlippedIndex: number | null = null;
   private matchedPairs = 0;
   private totalPairs = 0;
   private mismatches = 0;
   private timeLeft: number;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private finished = false;
-  private lockBoard = false;
 
   constructor(tier: number = 0) {
     this.tier = tier;
@@ -57,7 +56,7 @@ export class AppraisalGame implements Minigame {
 
   generateCards(): void {
     const reduction = gameState.hasUpgrade('master_appraiser') ? 2 : 0;
-    const pairCount = Math.max(3, 4 + Math.min(this.tier, 4) - reduction);
+    const pairCount = Math.max(3, 3 + Math.min(this.tier, 4) - reduction);
     this.totalPairs = pairCount;
 
     // Pick random icons
@@ -157,7 +156,7 @@ export class AppraisalGame implements Minigame {
         cardEl.style.fontFamily = 'var(--font-display)';
 
         cardEl.addEventListener('mouseenter', () => {
-          if (!this.lockBoard && !this.finished) {
+          if (!this.finished) {
             cardEl.style.borderColor = 'var(--gold-dim)';
             cardEl.style.transform = 'scale(1.05)';
           }
@@ -178,26 +177,23 @@ export class AppraisalGame implements Minigame {
   }
 
   handleFlip(index: number): void {
-    if (this.finished || this.lockBoard) return;
+    if (this.finished) return;
     const card = this.cards[index];
     if (card.flipped || card.matched) return;
 
-    card.flipped = true;
-    this.flippedIndices.push(index);
-    this.render();
+    if (this.lastFlippedIndex === null) {
+      card.flipped = true;
+      this.lastFlippedIndex = index;
+      this.render();
+    } else {
+      const prevCard = this.cards[this.lastFlippedIndex];
 
-    if (this.flippedIndices.length === 2) {
-      this.lockBoard = true;
-      const [first, second] = this.flippedIndices;
-      const cardA = this.cards[first];
-      const cardB = this.cards[second];
-
-      if (cardA.pairId === cardB.pairId) {
-        cardA.matched = true;
-        cardB.matched = true;
+      if (card.pairId === prevCard.pairId) {
+        card.flipped = true;
+        card.matched = true;
+        prevCard.matched = true;
         this.matchedPairs++;
-        this.flippedIndices = [];
-        this.lockBoard = false;
+        this.lastFlippedIndex = null;
         this.render();
 
         if (this.matchedPairs >= this.totalPairs) {
@@ -205,13 +201,10 @@ export class AppraisalGame implements Minigame {
         }
       } else {
         this.mismatches++;
-        setTimeout(() => {
-          cardA.flipped = false;
-          cardB.flipped = false;
-          this.flippedIndices = [];
-          this.lockBoard = false;
-          this.render();
-        }, 800);
+        prevCard.flipped = false;
+        card.flipped = true;
+        this.lastFlippedIndex = index;
+        this.render();
       }
     }
   }
@@ -272,6 +265,7 @@ export class AppraisalGame implements Minigame {
       mismatches: this.mismatches,
       timeLeft: this.timeLeft,
       finished: this.finished,
+      lastFlippedIndex: this.lastFlippedIndex,
     };
   }
 }

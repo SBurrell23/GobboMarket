@@ -8,12 +8,16 @@ import { getCompletedMilestones, getAllMilestones } from '../../progression/Mile
 import { getReputationLevel } from '../../progression/Reputation.js';
 import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
 
+export type PanelMode = 'upgrades' | 'progress';
+
 export class UpgradePanel {
   private el: HTMLElement;
+  private mode: PanelMode;
 
-  constructor(parent: HTMLElement) {
+  constructor(parent: HTMLElement, mode: PanelMode = 'upgrades') {
+    this.mode = mode;
     this.el = document.createElement('div');
-    this.el.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 0;';
+    this.el.style.cssText = 'display: flex; flex-direction: column; gap: 16px; padding: 16px 0;';
     parent.appendChild(this.el);
 
     this.render();
@@ -28,36 +32,31 @@ export class UpgradePanel {
   render(): void {
     this.el.innerHTML = '';
 
-    // Top row: Status (full width)
-    this.renderStatus();
-
-    // Left column: Tier progress
-    const leftCol = document.createElement('div');
-    leftCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-    this.el.appendChild(leftCol);
-    this.renderTierProgress(leftCol);
-
-    // Right column: Upgrades + Recipes stacked
-    const rightCol = document.createElement('div');
-    rightCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-    this.el.appendChild(rightCol);
-    this.renderUpgrades(rightCol);
-    this.renderRecipes(rightCol);
-
-    // Bottom row: Milestones (full width)
-    this.renderMilestones();
-
-    // Reset button (full width)
-    this.renderResetButton();
+    if (this.mode === 'upgrades') {
+      const cols = document.createElement('div');
+      cols.style.cssText = 'display: grid; grid-template-columns: 3fr 2fr; gap: 16px; align-items: start;';
+      this.el.appendChild(cols);
+      this.renderUpgrades(cols);
+      this.renderRecipes(cols);
+    } else {
+      this.renderStatus();
+      const cols = document.createElement('div');
+      cols.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px;';
+      this.el.appendChild(cols);
+      this.renderTierProgress(cols);
+      const rightCol = document.createElement('div');
+      rightCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+      cols.appendChild(rightCol);
+      this.renderMilestones(rightCol);
+      this.renderResetButton();
+    }
   }
 
   private renderStatus(): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.style.gridColumn = '1 / -1';
     const tierInfo = getTierInfo(gameState.currentTier);
 
-    // Next tier progress
     const nextTier = gameState.currentTier + 1;
     const hasNext = nextTier < TIER_THRESHOLDS.length;
     let nextTierHtml = '';
@@ -170,105 +169,118 @@ export class UpgradePanel {
 
   private renderUpgrades(target: HTMLElement): void {
     const upgrades = getAvailableUpgrades();
-    if (upgrades.length === 0) return;
 
     const panel = document.createElement('div');
     panel.className = 'panel';
     panel.innerHTML = `<div class="panel-header"><h3>⬆️ Upgrades</h3></div>`;
 
-    const list = document.createElement('div');
-    list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+    if (upgrades.length === 0) {
+      const empty = document.createElement('p');
+      empty.style.cssText = 'color: var(--ink-dim); font-size: 0.85rem; padding: 8px; font-style: italic;';
+      empty.textContent = 'No upgrades available right now. Keep progressing!';
+      panel.appendChild(empty);
+    } else {
+      const list = document.createElement('div');
+      list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
-    for (const upgrade of upgrades) {
-      const canAfford = gameState.coins >= upgrade.cost;
-      const item = document.createElement('div');
-      item.style.cssText = `
-        display: flex; align-items: center; gap: 8px; padding: 8px;
-        background: var(--parchment-light); border-radius: 4px;
-        border: 1px solid var(--parchment-lighter);
-        opacity: ${canAfford ? '1' : '0.6'};
-        cursor: ${canAfford ? 'pointer' : 'default'};
-        transition: border-color 0.15s;
-      `;
-      item.innerHTML = `
-        <span style="font-size: 1.3rem;">${upgrade.icon}</span>
-        <div style="flex: 1;">
-          <div style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</div>
-          <div style="color: var(--ink-dim); font-size: 0.8rem;">${upgrade.description}</div>
-        </div>
-        <div style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display); white-space: nowrap;">
-          ${upgrade.cost.toLocaleString()} 🪙
-        </div>
-      `;
+      for (const upgrade of upgrades) {
+        const canAfford = gameState.coins >= upgrade.cost;
+        const item = document.createElement('div');
+        item.style.cssText = `
+          display: flex; align-items: center; gap: 8px; padding: 8px;
+          background: var(--parchment-light); border-radius: 4px;
+          border: 1px solid var(--parchment-lighter);
+          opacity: ${canAfford ? '1' : '0.6'};
+          cursor: ${canAfford ? 'pointer' : 'default'};
+          transition: border-color 0.15s;
+        `;
+        item.innerHTML = `
+          <span style="font-size: 1.3rem;">${upgrade.icon}</span>
+          <div style="flex: 1;">
+            <div style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</div>
+            <div style="color: var(--ink-dim); font-size: 0.8rem;">${upgrade.description}</div>
+          </div>
+          <div style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display); white-space: nowrap;">
+            ${upgrade.cost.toLocaleString()} 🪙
+          </div>
+        `;
 
-      if (canAfford) {
-        item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
-        item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
-        item.addEventListener('click', () => {
-          purchaseUpgrade(upgrade.id);
-          this.render();
-        });
+        if (canAfford) {
+          item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
+          item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
+          item.addEventListener('click', () => {
+            purchaseUpgrade(upgrade.id);
+            this.render();
+          });
+        }
+
+        list.appendChild(item);
       }
 
-      list.appendChild(item);
+      panel.appendChild(list);
     }
 
-    panel.appendChild(list);
     target.appendChild(panel);
   }
 
   private renderRecipes(target: HTMLElement): void {
     const recipes = getAvailableRecipes();
-    if (recipes.length === 0) return;
 
     const panel = document.createElement('div');
     panel.className = 'panel';
     panel.innerHTML = `<div class="panel-header"><h3>📜 Recipes</h3></div>`;
 
-    const list = document.createElement('div');
-    list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+    if (recipes.length === 0) {
+      const empty = document.createElement('p');
+      empty.style.cssText = 'color: var(--ink-dim); font-size: 0.85rem; padding: 8px; font-style: italic;';
+      empty.textContent = 'No recipes available yet. Unlock more market tiers!';
+      panel.appendChild(empty);
+    } else {
+      const list = document.createElement('div');
+      list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
-    for (const recipe of recipes) {
-      const canAfford = gameState.coins >= recipe.cost;
-      const item = document.createElement('div');
-      item.style.cssText = `
-        display: flex; align-items: center; justify-content: space-between; padding: 8px;
-        background: var(--parchment-light); border-radius: 4px;
-        border: 1px solid var(--parchment-lighter);
-        opacity: ${canAfford ? '1' : '0.6'};
-        cursor: ${canAfford ? 'pointer' : 'default'};
-        transition: border-color 0.15s;
-      `;
-      item.innerHTML = `
-        <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${recipe.name}</span>
-        <span style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display);">
-          ${recipe.cost.toLocaleString()} 🪙
-        </span>
-      `;
+      for (const recipe of recipes) {
+        const canAfford = gameState.coins >= recipe.cost;
+        const item = document.createElement('div');
+        item.style.cssText = `
+          display: flex; align-items: center; justify-content: space-between; padding: 8px;
+          background: var(--parchment-light); border-radius: 4px;
+          border: 1px solid var(--parchment-lighter);
+          opacity: ${canAfford ? '1' : '0.6'};
+          cursor: ${canAfford ? 'pointer' : 'default'};
+          transition: border-color 0.15s;
+        `;
+        item.innerHTML = `
+          <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${recipe.name}</span>
+          <span style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display);">
+            ${recipe.cost.toLocaleString()} 🪙
+          </span>
+        `;
 
-      if (canAfford) {
-        item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
-        item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
-        item.addEventListener('click', () => {
-          purchaseRecipe(recipe.id);
-          this.render();
-        });
+        if (canAfford) {
+          item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
+          item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
+          item.addEventListener('click', () => {
+            purchaseRecipe(recipe.id);
+            this.render();
+          });
+        }
+
+        list.appendChild(item);
       }
 
-      list.appendChild(item);
+      panel.appendChild(list);
     }
 
-    panel.appendChild(list);
     target.appendChild(panel);
   }
 
-  private renderMilestones(): void {
+  private renderMilestones(target: HTMLElement): void {
     const all = getAllMilestones();
     const completed = getCompletedMilestones();
 
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.style.gridColumn = '1 / -1';
     panel.innerHTML = `<div class="panel-header"><h3>🏆 Milestones (${completed.length}/${all.length})</h3></div>`;
 
     const grid = document.createElement('div');
@@ -295,13 +307,13 @@ export class UpgradePanel {
     }
 
     panel.appendChild(grid);
-    this.el.appendChild(panel);
+    target.appendChild(panel);
   }
 
   private renderResetButton(): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.style.cssText = 'text-align: center; margin-top: 8px; grid-column: 1 / -1;';
+    panel.style.cssText = 'text-align: center; margin-top: 8px;';
     panel.innerHTML = `
       <button class="btn btn-red" id="reset-game-btn" style="font-size: 0.85rem; padding: 6px 16px;">
         🗑️ Reset Game

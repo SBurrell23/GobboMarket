@@ -110,15 +110,6 @@ export const UPGRADES: UpgradeDefinition[] = [
     effect: () => gameState.addUpgrade('rune_library'),
     icon: '📚',
   },
-  {
-    id: 'apprentice_helper',
-    name: 'Apprentice Helper',
-    description: 'Bought goods start at Passable quality (skip minigame).',
-    cost: 200,
-    tier: 1,
-    effect: () => gameState.addUpgrade('apprentice_helper'),
-    icon: '🧑‍🤝‍🧑',
-  },
   // Tier 2 upgrades
   {
     id: 'merchant_guild',

@@ -11,14 +11,14 @@ describe('AppraisalGame (Memory Match)', () => {
   it('should generate correct number of card pairs for tier 0', () => {
     game.generateCards();
     const state = game.getState();
-    expect(state.totalPairs).toBe(4);
-    expect(state.cards).toHaveLength(8);
+    expect(state.totalPairs).toBe(3);
+    expect(state.cards).toHaveLength(6);
   });
 
   it('should generate more pairs at higher tiers', () => {
     const game2 = new AppraisalGame(2);
     game2.generateCards();
-    expect(game2.getState().totalPairs).toBe(6);
+    expect(game2.getState().totalPairs).toBe(5);
   });
 
   it('should have all cards face down initially', () => {

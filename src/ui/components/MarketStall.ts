@@ -20,6 +20,7 @@ export class MarketStall {
   private customerEl: HTMLElement;
   private overlayEl: HTMLElement;
   private minigameContainer: HTMLElement;
+  private hasAnimatedEntrance = false;
 
   // Persistent DOM references for diff-based customer rendering
   private customerPanel: HTMLElement | null = null;
@@ -66,12 +67,15 @@ export class MarketStall {
     eventBus.on('tier:unlocked', () => this.render());
     eventBus.on('coins:changed', () => this.renderSuppliers());
     eventBus.on('stall:upgraded', () => this.renderStall());
+    eventBus.on('recipe:unlocked', () => this.renderSuppliers());
+    eventBus.on('upgrade:purchased', () => this.renderSuppliers());
   }
 
   render(): void {
     this.renderSuppliers();
     this.renderStall();
     this.renderCustomers();
+    this.hasAnimatedEntrance = true;
   }
 
   private renderSuppliers(): void {
@@ -82,7 +86,7 @@ export class MarketStall {
     craftPanel.className = 'panel';
     craftPanel.innerHTML = `<div class="panel-header"><h3>⚒️ Forge & Craft</h3></div>`;
     const craftGrid = document.createElement('div');
-    craftGrid.className = 'goods-grid';
+    craftGrid.className = `goods-grid${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
 
     const craftable = getCraftableGoods(gameState.currentTier, [...gameState.data.unlockedRecipes]);
     for (const goods of craftable) {
@@ -127,7 +131,7 @@ export class MarketStall {
     buyPanel.className = 'panel';
     buyPanel.innerHTML = `<div class="panel-header"><h3>🏪 Buy Goods</h3></div>`;
     const buyGrid = document.createElement('div');
-    buyGrid.className = 'goods-grid';
+    buyGrid.className = `goods-grid${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
 
     const buyable = getBuyableGoods(gameState.currentTier);
     for (const goods of buyable) {
@@ -178,7 +182,7 @@ export class MarketStall {
     `;
 
     const grid = document.createElement('div');
-    grid.className = 'goods-grid';
+    grid.className = `goods-grid${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
 
     if (gameState.inventory.length === 0) {
       grid.innerHTML = '<p style="color: var(--ink-dim); font-size: 0.85rem; grid-column: 1/-1; padding: 20px; text-align: center;">Your stall is empty. Craft or buy some goods to sell!</p>';
@@ -307,7 +311,7 @@ export class MarketStall {
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
         <div class="customer-card__name">${customer.name}</div>
-        <div class="customer-card__desire">Wants: ${customer.desiredCategory}</div>
+        <div class="customer-card__desire">Wants: <span style="text-transform: uppercase; color: var(--gold); font-family: var(--font-display); letter-spacing: 0.5px;">${customer.desiredCategory}</span></div>
         <div style="font-size: 0.75rem; color: ${haggleColor};">🎲 ${haggleLabel}</div>
         <div class="patience-bar" style="margin-top: 4px; height: 3px; background: var(--parchment-lighter); border-radius: 2px; overflow: hidden;">
           <div class="patience-bar__fill" style="height: 100%; background: var(--gold-dim); border-radius: 2px; transition: width 1s linear; width: 100%;"></div>
@@ -324,7 +328,7 @@ export class MarketStall {
     card.addEventListener('mouseenter', () => {
       showTooltip(card, `
         <strong style="color: var(--gold)">${customer.name}</strong> the ${customer.type}<br>
-        Wants: ${customer.desiredCategory}<br>
+        Wants: <span style="text-transform: uppercase; color: var(--gold);">${customer.desiredCategory}</span><br>
         Haggle skill: ${Math.round(customer.haggleSkill * 100)}%<br>
         Budget: ${customer.budgetMultiplier > 1 ? 'Generous' : customer.budgetMultiplier < 1 ? 'Cheap' : 'Normal'}
       `);
@@ -382,55 +386,18 @@ export class MarketStall {
       gameState.addToInventory(item);
       gameState.recordCraft();
 
-      this.showCraftResult(goods, result.quality);
+      this.hideOverlay();
+      this.render();
       checkMilestones();
     };
 
     forge.start(this.minigameContainer.querySelector('#forge-area')!);
   }
 
-  private showCraftResult(goods: GoodsDefinition, quality: number): void {
-    const qualityLabel = QUALITY_LABELS[Math.min(quality, QUALITY_LABELS.length - 1)];
-    const qualityColor = quality >= 3 ? 'var(--gold)' : quality >= 2 ? 'var(--green-bright)' : 'var(--ink-dim)';
-
-    this.minigameContainer.innerHTML = `
-      <div style="text-align: center; padding: 24px;">
-        <div style="font-size: 3rem; margin-bottom: 12px;">${goods.icon}</div>
-        <h2 style="margin-bottom: 8px;">Item Forged!</h2>
-        <p style="font-size: 1.2rem; color: ${qualityColor}; font-family: var(--font-display); margin-bottom: 4px;">
-          ${qualityLabel} ${goods.name}
-        </p>
-        <p style="color: var(--ink-dim); margin-bottom: 20px;">${goods.description}</p>
-        <button class="btn btn-gold close-btn">Back to Market</button>
-      </div>
-    `;
-
-    this.minigameContainer.querySelector('.close-btn')!.addEventListener('click', () => {
-      this.hideOverlay();
-      this.render();
-    });
-  }
 
   private buyGoods(goods: GoodsDefinition): void {
     const cost = calculateBuyPrice(goods.id, gameState.currentTier);
     if (!gameState.spendCoins(cost, goods.name)) return;
-
-    // Apprentice Helper: skip appraisal and auto-assign quality 1
-    if (gameState.hasUpgrade('apprentice_helper')) {
-      const item: InventoryItem = {
-        id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        goodsId: goods.id,
-        quality: 1,
-        enchanted: false,
-        enchantMultiplier: 1,
-        basePrice: goods.basePrice,
-      };
-      gameState.addToInventory(item);
-      eventBus.emit('item:bought', { itemId: item.id, price: cost });
-      this.render();
-      checkMilestones();
-      return;
-    }
 
     // Appraisal minigame for bought goods
     eventBus.emit('minigame:started', { type: 'appraisal' });

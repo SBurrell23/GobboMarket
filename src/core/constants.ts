@@ -69,7 +69,7 @@ export const CUSTOMER_TIER_UNLOCK: Record<string, number> = {
   wizard: 7,
 };
 
-export const FORGE_STRIKES = 3;
+export const FORGE_STRIKES = 2;
 export const FORGE_BASE_WINDOW = 0.25;
 export const FORGE_TIER_TIGHTENING = 0.03;
 
@@ -85,7 +85,7 @@ export const APPRAISAL_TIER_EXTRA_ITEMS = 1;
 
 export const RUNECRAFT_BASE_GRID = 3;
 export const RUNECRAFT_TIME_SECONDS = 30;
-export const RUNECRAFT_ENCHANT_MULTIPLIER = 1.5;
+export const RUNECRAFT_ENCHANT_MULTIPLIER = 3.0;
 
 export const STALL_BASE_SLOTS = 4;
 export const STALL_SLOT_UPGRADE_COST_BASE = 100;
