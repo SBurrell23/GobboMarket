@@ -52,67 +52,64 @@ describe('Cooldowns', () => {
     expect(state.isOnCooldown('rat_jerky')).toBe(false);
   });
 
-  it('should apply quick_hands reduction for tier 0-1 items', () => {
+  it('should apply quick_hands reduction for tier 1-2 items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('quick_hands');
-    state.startCooldown('iron_dagger', 36); // tier 0, 36 * 0.75 = 27
-    expect(state.getCooldownRemaining('iron_dagger')).toBe(27);
+    state.addUpgradeRank('quick_hands');
+    state.startCooldown('elven_bow', 135); // tier 2, 135 * (1 - 0.06) = 126.9 -> 127
+    expect(state.getCooldownRemaining('elven_bow')).toBe(127);
   });
 
-  it('should NOT apply quick_hands to tier 2+ items', () => {
+  it('should NOT apply quick_hands to tier 0 or tier 3+ items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('quick_hands');
-    state.startCooldown('elven_bow', 135); // tier 2, should stay 135
-    expect(state.getCooldownRemaining('elven_bow')).toBe(135);
+    state.addUpgradeRank('quick_hands');
+    state.startCooldown('iron_dagger', 36); // tier 0, no quick_hands
+    expect(state.getCooldownRemaining('iron_dagger')).toBe(36);
   });
 
   it('should apply efficient_workshop reduction for craftable items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('efficient_workshop');
-    state.startCooldown('iron_dagger', 36); // craftable, 36 * 0.80 = 28.8 -> 29
-    expect(state.getCooldownRemaining('iron_dagger')).toBeLessThanOrEqual(29);
-    expect(state.getCooldownRemaining('iron_dagger')).toBeGreaterThanOrEqual(28);
+    state.addUpgradeRank('efficient_workshop');
+    state.startCooldown('iron_dagger', 36); // craftable, 36 * (1 - 0.08) = 33.12 -> 33
+    expect(state.getCooldownRemaining('iron_dagger')).toBe(33);
   });
 
   it('should apply supply_chain reduction for buyable items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('supply_chain');
-    state.startCooldown('rat_jerky', 24); // not craftable, 24 * 0.80 = 19.2 -> 19
-    expect(state.getCooldownRemaining('rat_jerky')).toBe(19);
+    state.addUpgradeRank('supply_chain');
+    state.startCooldown('rat_jerky', 24); // not craftable, 24 * (1 - 0.07) = 22.32 -> 22
+    expect(state.getCooldownRemaining('rat_jerky')).toBe(22);
   });
 
   it('should apply master_supplier reduction to all items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('master_supplier');
-    state.startCooldown('elven_bow', 135); // 135 * 0.75 = 101.25 -> 101
-    const remaining = state.getCooldownRemaining('elven_bow');
-    expect(remaining).toBeLessThanOrEqual(101);
-    expect(remaining).toBeGreaterThanOrEqual(100);
+    state.addUpgradeRank('master_supplier');
+    state.startCooldown('elven_bow', 135); // 135 * (1 - 0.10) = 121.5 -> 122
+    expect(state.getCooldownRemaining('elven_bow')).toBe(122);
   });
 
   it('should stack multiple upgrade reductions multiplicatively', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgrade('quick_hands');
-    state.addUpgrade('efficient_workshop');
-    state.addUpgrade('master_supplier');
-    // iron_dagger: tier 0, craftable
-    // 36 * 0.75 (quick_hands) * 0.80 (efficient_workshop) * 0.75 (master_supplier) = 16.2 -> 16
-    state.startCooldown('iron_dagger', 36);
-    const remaining = state.getCooldownRemaining('iron_dagger');
-    expect(remaining).toBeLessThanOrEqual(17);
-    expect(remaining).toBeGreaterThanOrEqual(16);
+    state.addUpgradeRank('quick_hands');
+    state.addUpgradeRank('efficient_workshop');
+    state.addUpgradeRank('master_supplier');
+    // elven_bow: tier 2, craftable - gets all three
+    // 135 * 0.94 * 0.92 * 0.90 = 105.1 -> 105
+    state.startCooldown('elven_bow', 135);
+    const remaining = state.getCooldownRemaining('elven_bow');
+    expect(remaining).toBeLessThanOrEqual(106);
+    expect(remaining).toBeGreaterThanOrEqual(104);
   });
 
   it('should clean expired cooldowns', () => {

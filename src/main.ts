@@ -3,23 +3,29 @@ import './styles/theme.css';
 import './styles/layout.css';
 import './styles/animations.css';
 
+import { initSounds, soundManager } from './audio/initSounds.js';
+import { showSettingsModal } from './ui/components/SettingsModal.js';
 import { gameState } from './core/GameState.js';
+import { TIER_NAMES, CUSTOMER_TIER_UNLOCK } from './core/constants.js';
 import { eventBus } from './core/EventBus.js';
 import { saveSystem } from './core/SaveSystem.js';
 import { customerQueue } from './market/CustomerQueue.js';
 import { ScreenManager, type ScreenName } from './ui/ScreenManager.js';
 import { CoinDisplay } from './ui/components/CoinDisplay.js';
+import { HeaderProgress } from './ui/components/HeaderProgress.js';
 import { MarketStall } from './ui/components/MarketStall.js';
 import { UpgradePanel } from './ui/components/UpgradePanel.js';
 import { WelcomeScreen } from './ui/components/WelcomeScreen.js';
-import { getReputationLevel } from './progression/Reputation.js';
 import { checkMilestones } from './progression/Milestones.js';
 
 function boot(): void {
+  initSounds();
+
   const app = document.getElementById('app')!;
 
   // Show welcome screen; game starts after user clicks
   new WelcomeScreen(document.body, () => {
+    soundManager.play('game_start');
     startGame(app);
   });
 }
@@ -39,19 +45,25 @@ function startGame(app: HTMLElement): void {
 
   const coinDisplay = new CoinDisplay(stats);
 
-  const repEl = document.createElement('div');
-  repEl.style.cssText = 'font-family: var(--font-display); font-size: 0.95rem; color: var(--ink-dim);';
-  repEl.id = 'rep-display';
-  updateRepDisplay(repEl);
-  stats.appendChild(repEl);
-
   const tierEl = document.createElement('div');
   tierEl.style.cssText = 'font-family: var(--font-display); font-size: 0.95rem; color: var(--gold-dim);';
   tierEl.id = 'tier-display';
   updateTierDisplay(tierEl);
   stats.appendChild(tierEl);
 
+  const settingsBtn = document.createElement('button');
+  settingsBtn.className = 'btn btn-subtle';
+  settingsBtn.textContent = '⚙️';
+  settingsBtn.style.cssText = 'padding: 4px 10px; font-size: 1rem;';
+  settingsBtn.title = 'Settings';
+  settingsBtn.addEventListener('click', () => showSettingsModal());
+  stats.appendChild(settingsBtn);
+
+  const progressEl = document.createElement('div');
+  new HeaderProgress(progressEl);
+
   header.appendChild(titleEl);
+  header.appendChild(progressEl);
   header.appendChild(stats);
   app.appendChild(header);
 
@@ -103,7 +115,7 @@ function startGame(app: HTMLElement): void {
 
   // Help screen
   const helpScreen = document.createElement('div');
-  helpScreen.style.cssText = 'padding: 16px 12px; max-width: 900px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  helpScreen.style.cssText = 'padding: 16px 2.5%; max-width: 95%; width: 95%; margin: 0 auto; overflow-y: auto; height: 100%;';
   helpScreen.innerHTML = buildHelpContent();
   screenManager.register('help', helpScreen);
 
@@ -124,7 +136,6 @@ function startGame(app: HTMLElement): void {
   eventBus.on('coins:changed', () => saveSystem.save());
 
   // Update header displays on changes
-  eventBus.on('reputation:changed', () => updateRepDisplay(repEl));
   eventBus.on('tier:unlocked', ({ name }) => {
     updateTierDisplay(tierEl);
     showTierNotification(name);
@@ -143,10 +154,6 @@ function startGame(app: HTMLElement): void {
 
   // Suppress unused variable warnings
   void coinDisplay;
-}
-
-function updateRepDisplay(el: HTMLElement): void {
-  el.textContent = `⭐ ${getReputationLevel()} (${gameState.reputation})`;
 }
 
 function updateTierDisplay(el: HTMLElement): void {
@@ -187,7 +194,31 @@ function showTierNotification(tierName: string): void {
   }, 3000);
 }
 
+const CATEGORY_PLURAL: Record<string, string> = {
+  weapon: 'WEAPONS', armor: 'ARMOR', potion: 'POTIONS', trinket: 'TRINKETS', food: 'FOOD', material: 'MATERIALS',
+};
+
+const RACES_HELP: { icon: string; name: string; prefs: string[]; haggle: string; budget: string }[] = [
+  { icon: '👺', name: 'Goblin', prefs: ['weapon', 'food', 'trinket', 'potion'], haggle: 'High', budget: '0.8x' },
+  { icon: '🧑', name: 'Human', prefs: ['weapon', 'armor', 'food', 'potion'], haggle: 'Medium', budget: '1x' },
+  { icon: '🧝', name: 'Elf', prefs: ['potion', 'trinket', 'weapon'], haggle: 'Very high', budget: '1x' },
+  { icon: '⛏️', name: 'Dwarf', prefs: ['armor', 'weapon', 'food'], haggle: 'High', budget: '1x' },
+  { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Low', budget: '1x' },
+  { icon: '🧒', name: 'Halfling', prefs: ['food', 'potion', 'trinket'], haggle: 'Medium', budget: '1x' },
+  { icon: '👑', name: 'Noble', prefs: ['trinket', 'armor', 'potion'], haggle: 'Medium', budget: '1.5x' },
+  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'trinket', 'material'], haggle: 'Very high', budget: '1.3x' },
+];
+
 function buildHelpContent(): string {
+  const racesRows = RACES_HELP.map((r, i) => {
+    const type = ['goblin', 'human', 'elf', 'dwarf', 'orc', 'halfling', 'noble', 'wizard'][i] as keyof typeof CUSTOMER_TIER_UNLOCK;
+    const tierIdx = CUSTOMER_TIER_UNLOCK[type] ?? 0;
+    const tierName = TIER_NAMES[tierIdx] ?? 'Unknown';
+    const prefsStr = r.prefs.map(c => CATEGORY_PLURAL[c] ?? c.toUpperCase()).join(', ');
+    const cell = 'style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"';
+    return `<tr><td ${cell}>${r.icon} ${r.name}</td><td ${cell}>${prefsStr}</td><td ${cell}>${tierName}</td><td ${cell}>${r.haggle}</td><td ${cell}>${r.budget}</td></tr>`;
+  }).join('');
+
   return `
     <div style="display: flex; flex-direction: column; gap: 20px; color: var(--ink); font-size: 0.92rem; line-height: 1.6;">
       <div class="panel">
@@ -201,11 +232,83 @@ function buildHelpContent(): string {
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="panel">
+          <div class="panel-header"><h3>👥 Races</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
+            Each race prefers certain item categories and has unique traits. Desired items pay +25%, refused items pay 50%.
+          </p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 0.82rem;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Race</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Preferences</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Market Tier</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Haggle</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Budget</th>
+              </tr>
+            </thead>
+            <tbody style="color: var(--ink-dim);">
+              ${racesRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>⭐ Item Quality</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
+            Quality affects sell price and reputation. Earned from reaction time (buy) and forge timing (craft).
+          </p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 0.88rem;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Quality</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Sell</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Description</th>
+              </tr>
+            </thead>
+            <tbody style="color: var(--ink-dim);">
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-shoddy);">Shoddy</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.6x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Poor minigame performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-passable);">Passable</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Mediocre performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-fine);">Fine</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Decent performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-superior);">Superior</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.3x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Great performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-masterwork);">Masterwork</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.8x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Amazing performance</td></tr>
+            </tbody>
+          </table>
+          <p style="color: var(--ink-dim); margin-top: 8px; font-size: 0.82rem;">
+            Superior and Masterwork add bonus reputation per sale.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>🎲 Customers & Haggling</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
+            <strong style="color: var(--gold);">Haggle skill</strong> affects the customer's d20 roll — higher skill means higher minimum. Each customer gets a random skill tier.
+          </p>
+          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
+            <strong style="color: var(--gold);">Outcomes:</strong> Win = 1.5x, +5 rep. Settle = 1.0x–1.25x. Bust (roll 1) = 0.65x–0.85x.
+          </p>
+          <p style="color: var(--ink-dim); font-size: 0.88rem;">
+            Desired item +25% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Goblin 0.8x.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>📜 Reputation</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
+            <strong style="color: var(--gold);">Earn:</strong> Base 8 per sale. +4 per quality rank above Fine (Superior +4, Masterwork +8). +5 for winning the haggle.
+          </p>
+          <p style="color: var(--ink-dim); font-size: 0.88rem;">
+            Reputation is tracked <strong>per race</strong>. Each market tier requires minimum reputation with specific races to unlock.
+          </p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
 
         <div class="panel">
           <div class="panel-header"><h3>🛒 Buying Goods</h3></div>
           <p style="color: var(--ink-dim);">
-            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Appraisal minigame</strong> — a memory-match card game. Flip pairs of matching cards before time runs out. The more pairs you match, the higher the quality of the item you receive.
+            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (2-7 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
           </p>
         </div>
 

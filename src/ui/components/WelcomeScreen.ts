@@ -44,7 +44,7 @@ export class WelcomeScreen {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; font-size: 0.85rem; color: var(--ink-dim);">
             <div><span style="color: var(--gold);">⚒️ Forge</span><br>Time your strikes to craft quality goods</div>
             <div><span style="color: var(--gold);">🎲 Haggle</span><br>Bluff and barter for the best prices</div>
-            <div><span style="color: var(--gold);">🔍 Appraise</span><br>Spot genuine items among fakes</div>
+            <div><span style="color: var(--gold);">🪙 Buy</span><br>Buy at the right moment for better quality</div>
             <div><span style="color: var(--gold);">✨ Enchant</span><br>Match rune patterns to add value</div>
           </div>
         </div>

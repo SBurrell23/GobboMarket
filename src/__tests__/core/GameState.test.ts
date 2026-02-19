@@ -98,11 +98,11 @@ describe('GameState', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      // T1 requires: 150 coins, goblin: 50, human: 50
+      // T1 requires: 150 coins, goblin: 40, human: 40
       state.addCoins(200, 'test');
-      state.addRaceReputation('goblin', 50);
+      state.addRaceReputation('goblin', 40);
       expect(state.currentTier).toBe(0); // Still need human rep
-      state.addRaceReputation('human', 50);
+      state.addRaceReputation('human', 40);
 
       expect(state.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
@@ -112,11 +112,11 @@ describe('GameState', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      // T2 requires: 500 coins, goblin: 100, human: 100, elf: 50
+      // T2 requires: 500 coins, goblin: 75, human: 75, elf: 40
       state.addCoins(600, 'test');
-      state.addRaceReputation('goblin', 100);
-      state.addRaceReputation('human', 100);
-      state.addRaceReputation('elf', 50);
+      state.addRaceReputation('goblin', 75);
+      state.addRaceReputation('human', 75);
+      state.addRaceReputation('elf', 40);
 
       expect(state.currentTier).toBe(2);
       expect(tierCb).toHaveBeenCalledTimes(2);
@@ -144,7 +144,7 @@ describe('GameState', () => {
     });
 
     it('should not exceed stall slots', () => {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         state.addToInventory({
           id: `item-${i}`,
           goodsId: 'iron_dagger',
@@ -163,7 +163,7 @@ describe('GameState', () => {
         basePrice: 10,
       });
       expect(added).toBe(false);
-      expect(state.inventory).toHaveLength(4);
+      expect(state.inventory).toHaveLength(5);
     });
 
     it('should remove items from inventory', () => {
@@ -187,16 +187,16 @@ describe('GameState', () => {
   });
 
   describe('upgrades and recipes', () => {
-    it('should track upgrades', () => {
-      expect(state.hasUpgrade('forge_hammer')).toBe(false);
-      state.addUpgrade('forge_hammer');
-      expect(state.hasUpgrade('forge_hammer')).toBe(true);
+    it('should track upgrade ranks', () => {
+      expect(state.getUpgradeRank('forge_hammer')).toBe(0);
+      state.addUpgradeRank('forge_hammer');
+      expect(state.getUpgradeRank('forge_hammer')).toBe(1);
     });
 
-    it('should not duplicate upgrades', () => {
-      state.addUpgrade('forge_hammer');
-      state.addUpgrade('forge_hammer');
-      expect(state.data.upgrades).toHaveLength(1);
+    it('should increment upgrade rank on repeated purchase', () => {
+      state.addUpgradeRank('forge_hammer');
+      state.addUpgradeRank('forge_hammer');
+      expect(state.getUpgradeRank('forge_hammer')).toBe(2);
     });
 
     it('should start with default recipes', () => {
@@ -216,7 +216,7 @@ describe('GameState', () => {
       state.addCoins(200, 'test');
       state.addRaceReputation('goblin', 20);
       state.addRaceReputation('human', 10);
-      state.addUpgrade('forge_hammer');
+      state.addUpgradeRank('forge_hammer');
 
       const json = state.serialize();
       const newState = new GameState();
@@ -227,7 +227,7 @@ describe('GameState', () => {
       expect(newState.reputation).toBe(30);
       expect(newState.getRaceReputation('goblin')).toBe(20);
       expect(newState.getRaceReputation('human')).toBe(10);
-      expect(newState.hasUpgrade('forge_hammer')).toBe(true);
+      expect(newState.getUpgradeRank('forge_hammer')).toBe(1);
     });
 
     it('should reject invalid JSON', () => {
@@ -245,13 +245,13 @@ describe('GameState', () => {
     it('should reset to default state', () => {
       state.addCoins(500, 'test');
       state.addRaceReputation('goblin', 100);
-      state.addUpgrade('forge_hammer');
+      state.addUpgradeRank('forge_hammer');
       state.reset();
 
       expect(state.coins).toBe(50);
       expect(state.reputation).toBe(0);
       expect(state.getRaceReputation('goblin')).toBe(0);
-      expect(state.hasUpgrade('forge_hammer')).toBe(false);
+      expect(state.getUpgradeRank('forge_hammer')).toBe(0);
     });
   });
 });

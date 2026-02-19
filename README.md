@@ -1,6 +1,6 @@
 # Gobbo Market
 
-A web-based incremental game about buying and selling goods at a fantasy goblin market. Forge items, haggle with customers, appraise rare finds, and craft enchantments through minigames to grow your stash of coins.
+A web-based incremental game about buying and selling goods at a fantasy goblin market. Forge items, haggle with customers, buy goods at the right moment, and craft enchantments through minigames to grow your stash of coins.
 
 ## Getting Started
 

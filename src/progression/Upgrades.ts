@@ -1,281 +1,224 @@
 import { gameState } from '../core/GameState.js';
-import { STALL_SLOT_UPGRADE_COST_BASE, STALL_SLOT_UPGRADE_COST_MULT } from '../core/constants.js';
+import { STALL_BASE_SLOTS, STALL_SLOT_UPGRADE_COST_BASE, STALL_SLOT_UPGRADE_COST_MULT, TIER_THRESHOLDS, UPGRADE_COST_CAP } from '../core/constants.js';
 
 export interface UpgradeDefinition {
   id: string;
   name: string;
   description: string;
-  cost: number;
   tier: number;
-  effect: () => void;
+  maxRank: number;
   icon: string;
+  costForRank(rank: number): number;
 }
 
-function stallSlotCost(): number {
+function widerStallCost(): number {
   const currentSlots = gameState.stallSlots;
-  const extraSlots = currentSlots - 4;
+  const extraSlots = currentSlots - STALL_BASE_SLOTS;
   return Math.round(STALL_SLOT_UPGRADE_COST_BASE * Math.pow(STALL_SLOT_UPGRADE_COST_MULT, extraSlots));
 }
 
-export const UPGRADES: UpgradeDefinition[] = [
-  // Tier 0 upgrades
+/** Cost for rank R of a tier-T upgrade: uses tier thresholds, capped so upgrades stay affordable vs 1M goal. */
+function tierScaledCost(tier: number, rank: number): number {
+  const idx = Math.min(tier + rank, TIER_THRESHOLDS.length - 1);
+  return Math.min(TIER_THRESHOLDS[idx], UPGRADE_COST_CAP);
+}
+
+export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
+  // Tier 0 (Muddy Alley)
   {
-    id: 'stall_slot_1',
+    id: 'wider_stall',
     name: 'Wider Stall',
-    description: 'Add one more display slot to your stall.',
-    get cost() { return stallSlotCost(); },
+    description: '+1 stall slot',
     tier: 0,
-    effect: () => gameState.incrementStallSlots(),
+    maxRank: Infinity,
     icon: '🏗️',
+    costForRank: () => widerStallCost(),
   },
   {
     id: 'market_sign',
     name: 'Market Sign',
-    description: 'Customers arrive 15% faster.',
-    cost: 40,
+    description: '+5% customer arrival speed',
     tier: 0,
-    effect: () => gameState.addUpgrade('market_sign'),
+    maxRank: 5,
     icon: '🪧',
+    costForRank: (rank) => tierScaledCost(0, rank),
   },
   {
     id: 'sturdy_workbench',
     name: 'Sturdy Workbench',
-    description: '+10% base sell price on all crafted items.',
-    cost: 50,
+    description: '+5% sell price on crafted items',
     tier: 0,
-    effect: () => gameState.addUpgrade('sturdy_workbench'),
+    maxRank: 6,
     icon: '🪑',
+    costForRank: (rank) => tierScaledCost(0, rank),
   },
+  // Tier 1 (Back Alley Bazaar)
   {
     id: 'thick_gloves',
     name: 'Thick Gloves',
-    description: 'Wider sweet spot in the forge minigame.',
-    cost: 60,
-    tier: 0,
-    effect: () => gameState.addUpgrade('thick_gloves'),
+    description: '+0.05 forge sweet spot width',
+    tier: 1,
+    maxRank: 5,
     icon: '🧤',
+    costForRank: (rank) => tierScaledCost(1, rank),
   },
   {
     id: 'hagglers_dice',
     name: "Haggler's Dice",
-    description: 'Customer d20 roll is reduced by 2 when haggling.',
-    cost: 175,
+    description: 'Customer d20 -1',
     tier: 1,
-    effect: () => gameState.addUpgrade('hagglers_dice'),
+    maxRank: 5,
     icon: '🎲',
+    costForRank: (rank) => tierScaledCost(1, rank),
   },
-  {
-    id: 'keen_eye',
-    name: 'Keen Eye',
-    description: '+5 seconds on all timed minigames.',
-    cost: 200,
-    tier: 1,
-    effect: () => gameState.addUpgrade('keen_eye'),
-    icon: '👁️',
-  },
-  {
-    id: 'quick_hands',
-    name: 'Quick Hands',
-    description: '-25% cooldown on Tier 1-2 items.',
-    cost: 90,
-    tier: 0,
-    effect: () => gameState.addUpgrade('quick_hands'),
-    icon: '🤲',
-  },
-  // Tier 1 upgrades
+  // Tier 2 (Market Square)
   {
     id: 'forge_bellows',
     name: 'Forge Bellows',
-    description: 'Slows the forge meter slightly for easier strikes.',
-    cost: 150,
-    tier: 1,
-    effect: () => gameState.addUpgrade('forge_bellows'),
+    description: 'Meter 10% slower',
+    tier: 2,
+    maxRank: 4,
     icon: '🔥',
-  },
-  {
-    id: 'silver_tongue',
-    name: 'Silver Tongue',
-    description: 'Customer d20 roll is reduced by another 3.',
-    cost: 600,
-    tier: 2,
-    effect: () => gameState.addUpgrade('silver_tongue'),
-    icon: '👅',
-  },
-  {
-    id: 'jewelers_loupe',
-    name: "Jeweler's Loupe",
-    description: '+5 more seconds on timed minigames.',
-    cost: 500,
-    tier: 2,
-    effect: () => gameState.addUpgrade('jewelers_loupe'),
-    icon: '🔍',
+    costForRank: (rank) => tierScaledCost(2, rank),
   },
   {
     id: 'rune_library',
     name: 'Rune Library',
-    description: 'Fewer shuffles in the sliding puzzle.',
-    cost: 250,
-    tier: 1,
-    effect: () => gameState.addUpgrade('rune_library'),
+    description: '6 fewer shuffles',
+    tier: 2,
+    maxRank: 4,
     icon: '📚',
+    costForRank: (rank) => tierScaledCost(2, rank),
   },
-  // Tier 2 upgrades
+  // Tier 3 (Trader's Row)
   {
-    id: 'efficient_workshop',
-    name: 'Efficient Workshop',
-    description: '-20% cooldown on all forged items.',
-    cost: 800,
-    tier: 2,
-    effect: () => gameState.addUpgrade('efficient_workshop'),
-    icon: '🏭',
-  },
-  {
-    id: 'merchant_guild',
-    name: 'Merchant Guild Card',
-    description: 'Reduces material costs by 10%.',
-    cost: 1000,
-    tier: 2,
-    effect: () => gameState.addUpgrade('merchant_guild'),
-    icon: '📜',
-  },
-  // Tier 3 upgrades
-  {
-    id: 'supply_chain',
-    name: 'Supply Chain',
-    description: '-20% cooldown on all bought goods.',
-    cost: 2000,
+    id: 'quick_hands',
+    name: 'Quick Hands',
+    description: '-6% cooldown on T1-2 items',
     tier: 3,
-    effect: () => gameState.addUpgrade('supply_chain'),
-    icon: '📦',
+    maxRank: 5,
+    icon: '🤲',
+    costForRank: (rank) => tierScaledCost(3, rank),
   },
   {
-    id: 'enchant_table',
-    name: 'Enchanting Table',
-    description: 'Increases enchantment multiplier bonus by 20%.',
-    cost: 2500,
+    id: 'keen_eye',
+    name: 'Keen Eye',
+    description: '+4 seconds on timed minigames',
     tier: 3,
-    effect: () => gameState.addUpgrade('enchant_table'),
-    icon: '✨',
+    maxRank: 5,
+    icon: '👁️',
+    costForRank: (rank) => tierScaledCost(3, rank),
   },
-  // Tier 4 upgrades
+  // Tier 4 (Merchant Quarter)
   {
-    id: 'master_forge',
-    name: 'Master Forge',
-    description: 'Wider sweet spot in forge minigame.',
-    cost: 6000,
+    id: 'auctioneers_reflex',
+    name: "Auctioneer's Reflex",
+    description: 'Reaction thresholds eased by 30ms',
     tier: 4,
-    effect: () => gameState.addUpgrade('master_forge'),
-    icon: '⚒️',
+    maxRank: 4,
+    icon: '⚡',
+    costForRank: (rank) => tierScaledCost(4, rank),
   },
   {
     id: 'bargain_specialist',
     name: 'Bargain Specialist',
-    description: '+30% sell price on Tier 1-3 items.',
-    cost: 4000,
+    description: '+15% sell on T1-3 items',
     tier: 4,
-    effect: () => gameState.addUpgrade('bargain_specialist'),
+    maxRank: 3,
     icon: '🏷️',
+    costForRank: (rank) => tierScaledCost(4, rank),
   },
-  // Tier 5 upgrades
+  // Tier 5 (Guild District)
+  {
+    id: 'supply_chain',
+    name: 'Supply Chain',
+    description: '-7% cooldown on bought goods',
+    tier: 5,
+    maxRank: 4,
+    icon: '📦',
+    costForRank: (rank) => tierScaledCost(5, rank),
+  },
+  {
+    id: 'enchanting_table',
+    name: 'Enchanting Table',
+    description: '+15% enchant multiplier',
+    tier: 5,
+    maxRank: 4,
+    icon: '✨',
+    costForRank: (rank) => tierScaledCost(5, rank),
+  },
+  // Tier 6 (Royal Bazaar)
+  {
+    id: 'efficient_workshop',
+    name: 'Efficient Workshop',
+    description: '-8% cooldown on forged items',
+    tier: 6,
+    maxRank: 4,
+    icon: '🏭',
+    costForRank: (rank) => tierScaledCost(6, rank),
+  },
+  // Tier 7 (Diamond Exchange)
+  {
+    id: 'merchant_guild',
+    name: 'Merchant Guild Card',
+    description: '-8% material costs',
+    tier: 7,
+    maxRank: 4,
+    icon: '📜',
+    costForRank: (rank) => tierScaledCost(7, rank),
+  },
+  // Tier 8 (Grand Exchange)
   {
     id: 'master_supplier',
     name: 'Master Supplier',
-    description: '-25% cooldown on all items.',
-    cost: 18000,
-    tier: 5,
-    effect: () => gameState.addUpgrade('master_supplier'),
+    description: '-10% cooldown on all items',
+    tier: 8,
+    maxRank: 5,
     icon: '🚀',
-  },
-  {
-    id: 'royal_charter',
-    name: 'Royal Charter',
-    description: 'Nobles visit more frequently and pay 20% more.',
-    cost: 15000,
-    tier: 5,
-    effect: () => gameState.addUpgrade('royal_charter'),
-    icon: '📋',
-  },
-  {
-    id: 'master_appraiser',
-    name: 'Master Appraiser',
-    description: 'Memory match starts with 2 fewer pairs.',
-    cost: 12000,
-    tier: 5,
-    effect: () => gameState.addUpgrade('master_appraiser'),
-    icon: '🧐',
-  },
-  // Tier 6 upgrades
-  {
-    id: 'vintage_trader',
-    name: 'Vintage Trader',
-    description: '+40% sell price on Tier 1-4 items.',
-    cost: 40000,
-    tier: 6,
-    effect: () => gameState.addUpgrade('vintage_trader'),
-    icon: '🏺',
-  },
-  {
-    id: 'grand_emporium',
-    name: 'Grand Emporium',
-    description: 'All goods sell for 15% more.',
-    cost: 50000,
-    tier: 6,
-    effect: () => gameState.addUpgrade('grand_emporium'),
-    icon: '🏛️',
-  },
-  {
-    id: 'golden_scales',
-    name: 'Golden Scales',
-    description: 'Customers pay 10% more for all goods.',
-    cost: 60000,
-    tier: 6,
-    effect: () => gameState.addUpgrade('golden_scales'),
-    icon: '⚖️',
-  },
-  // Tier 7 upgrades
-  {
-    id: 'arcane_anvil',
-    name: 'Arcane Anvil',
-    description: 'Forged items have a chance of starting enchanted.',
-    cost: 200000,
-    tier: 7,
-    effect: () => gameState.addUpgrade('arcane_anvil'),
-    icon: '🔮',
-  },
-  // Tier 8 upgrades
-  {
-    id: 'relic_connoisseur',
-    name: 'Relic Connoisseur',
-    description: '+50% sell price on Tier 1-6 items.',
-    cost: 350000,
-    tier: 8,
-    effect: () => gameState.addUpgrade('relic_connoisseur'),
-    icon: '🗝️',
-  },
-  {
-    id: 'merchant_legend',
-    name: 'Merchant Legend',
-    description: 'All sale prices doubled. The ultimate upgrade.',
-    cost: 400000,
-    tier: 8,
-    effect: () => gameState.addUpgrade('merchant_legend'),
-    icon: '🌟',
+    costForRank: (rank) => tierScaledCost(8, rank),
   },
 ];
 
-export function getAvailableUpgrades(): UpgradeDefinition[] {
-  return UPGRADES.filter(u => {
-    if (u.id === 'stall_slot_1') return true;
-    return u.tier <= gameState.currentTier && !gameState.hasUpgrade(u.id);
-  });
+export function getAvailableUpgrades(): Array<UpgradeDefinition & { currentRank: number; nextCost: number }> {
+  const tier = gameState.currentTier;
+  return UPGRADE_DEFINITIONS.filter((u) => u.tier <= tier)
+    .map((u) => {
+      let currentRank: number;
+      let nextCost: number;
+      if (u.id === 'wider_stall') {
+        currentRank = gameState.stallSlots - STALL_BASE_SLOTS;
+        nextCost = u.costForRank(0);
+      } else {
+        currentRank = gameState.getUpgradeRank(u.id);
+        const canRankUp = currentRank < u.maxRank;
+        nextCost = canRankUp ? u.costForRank(currentRank + 1) : 0;
+      }
+      return { ...u, currentRank, nextCost };
+    })
+    .filter((u) => {
+      if (u.id === 'wider_stall') return true;
+      return u.currentRank < u.maxRank;
+    });
 }
 
 export function purchaseUpgrade(upgradeId: string): boolean {
-  const upgrade = UPGRADES.find(u => u.id === upgradeId);
-  if (!upgrade) return false;
-  if (upgradeId !== 'stall_slot_1' && gameState.hasUpgrade(upgradeId)) return false;
-  if (!gameState.spendCoins(upgrade.cost, upgrade.name)) return false;
+  const def = UPGRADE_DEFINITIONS.find((u) => u.id === upgradeId);
+  if (!def) return false;
 
-  upgrade.effect();
+  let cost: number;
+  if (def.id === 'wider_stall') {
+    cost = def.costForRank(0);
+  } else {
+    const currentRank = gameState.getUpgradeRank(upgradeId);
+    if (currentRank >= def.maxRank) return false;
+    cost = def.costForRank(currentRank + 1);
+  }
+  if (!gameState.spendCoins(cost, def.name)) return false;
+
+  if (def.id === 'wider_stall') {
+    gameState.incrementStallSlots();
+  } else {
+    gameState.addUpgradeRank(upgradeId);
+  }
   return true;
 }

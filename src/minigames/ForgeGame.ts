@@ -1,6 +1,7 @@
 import type { Minigame, MinigameResult } from './MinigameBase.js';
 import { FORGE_STRIKES, FORGE_BASE_WINDOW, FORGE_TIER_TIGHTENING } from '../core/constants.js';
 import { gameState } from '../core/GameState.js';
+import { soundManager } from '../audio/SoundManager.js';
 
 export class ForgeGame implements Minigame {
   readonly type = 'forge';
@@ -28,8 +29,7 @@ export class ForgeGame implements Minigame {
   constructor(tier: number = 0) {
     this.tier = tier;
     let baseWidth = FORGE_BASE_WINDOW - tier * FORGE_TIER_TIGHTENING;
-    if (gameState.hasUpgrade('thick_gloves')) baseWidth += 0.06;
-    if (gameState.hasUpgrade('master_forge')) baseWidth += 0.06;
+    baseWidth += gameState.getUpgradeRank('thick_gloves') * 0.05;
     this.sweetSpotWidth = Math.max(0.08, baseWidth);
   }
 
@@ -63,7 +63,7 @@ export class ForgeGame implements Minigame {
     this.meterPosition = 0;
     this.meterDirection = 1;
     let speed = 1.2 + this.tier * 0.16;
-    if (gameState.hasUpgrade('forge_bellows')) speed *= 0.85;
+    speed *= Math.pow(0.90, gameState.getUpgradeRank('forge_bellows'));
     this.meterSpeed = speed;
     this.randomizeSweetSpot();
 
@@ -102,6 +102,7 @@ export class ForgeGame implements Minigame {
   private doStrike(): void {
     if (!this.waitingForStrike || !this.running) return;
     this.waitingForStrike = false;
+    soundManager.play('forge_strike');
 
     const distance = Math.abs(this.meterPosition - this.sweetSpotCenter);
     const halfGreen = this.sweetSpotWidth / 2;
@@ -159,9 +160,11 @@ export class ForgeGame implements Minigame {
       if (this.meterPosition >= 1) {
         this.meterPosition = 1;
         this.meterDirection = -1;
+        soundManager.play('forge_tick', { volume: 0.4 });
       } else if (this.meterPosition <= 0) {
         this.meterPosition = 0;
         this.meterDirection = 1;
+        soundManager.play('forge_tick', { volume: 0.4 });
       }
     }
 

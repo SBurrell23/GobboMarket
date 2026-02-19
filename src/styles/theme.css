@@ -15,6 +15,19 @@
   --green-bright: #5aab5a;
   --blue: #4a6a8b;
   --blue-bright: #5a8aab;
+  --purple: #8b6a9a;
+  --purple-bright: #a87ab8;
+  --orange: #c48a3a;
+  --orange-bright: #e0a050;
+  --pink-soft: #fff8ff;
+  --pink-soft-bright: #eac0f9;
+  /* Quality colors */
+  --quality-shoddy: var(--ink-dim);
+  --quality-passable: var(--green-bright);
+  --quality-fine: var(--blue-bright);
+  --quality-superior: var(--purple-bright);
+  --quality-masterwork: var(--orange-bright);
+  --enchanted-pink: var(--pink-soft-bright);
   --shadow: rgba(0, 0, 0, 0.6);
   --shadow-light: rgba(0, 0, 0, 0.3);
 
@@ -154,6 +167,13 @@ h3 { font-size: 1.4rem; }
 .green-text {
   color: var(--green-bright);
 }
+
+.quality-shoddy { color: var(--quality-shoddy); }
+.quality-passable { color: var(--quality-passable); }
+.quality-fine { color: var(--quality-fine); }
+.quality-superior { color: var(--quality-superior); }
+.quality-masterwork { color: var(--quality-masterwork); }
+.enchanted-pink { color: var(--enchanted-pink); }
 
 ::-webkit-scrollbar {
   width: 8px;

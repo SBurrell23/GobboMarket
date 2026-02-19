@@ -74,9 +74,9 @@ describe('GameFlow Integration', () => {
       const tierCb = vi.fn();
       eventBus.on('tier:unlocked', tierCb);
 
-      gameState.addRaceReputation('goblin', 50);
+      gameState.addRaceReputation('goblin', 40);
       expect(gameState.currentTier).toBe(0); // Still need human rep
-      gameState.addRaceReputation('human', 50);
+      gameState.addRaceReputation('human', 40);
 
       expect(gameState.currentTier).toBe(1);
       expect(tierCb).toHaveBeenCalledWith({ tier: 1, name: 'Back Alley Bazaar' });
@@ -88,8 +88,8 @@ describe('GameFlow Integration', () => {
     });
 
     it('should not unlock tier with only reputation', () => {
-      gameState.addRaceReputation('goblin', 100);
-      gameState.addRaceReputation('human', 100);
+      gameState.addRaceReputation('goblin', 75);
+      gameState.addRaceReputation('human', 75);
       expect(gameState.currentTier).toBe(0);
     });
   });
@@ -137,7 +137,7 @@ describe('GameFlow Integration', () => {
       gameState.addCoins(500, 'test');
       gameState.addRaceReputation('goblin', 50);
       gameState.addRaceReputation('human', 25);
-      gameState.addUpgrade('forge_bellows');
+      gameState.addUpgradeRank('forge_bellows');
       gameState.addToInventory({
         id: 'saved-item',
         goodsId: 'iron_dagger',
@@ -149,7 +149,7 @@ describe('GameFlow Integration', () => {
 
       const savedCoins = gameState.coins;
       const savedReputation = gameState.reputation;
-      const savedUpgrades = [...gameState.data.upgrades];
+      const savedUpgradeRanks = { ...gameState.data.upgradeRanks };
       const savedInventoryLength = gameState.inventory.length;
 
       // Save
@@ -160,7 +160,7 @@ describe('GameFlow Integration', () => {
       gameState.reset();
       expect(gameState.coins).toBe(50);
       expect(gameState.reputation).toBe(0);
-      expect(gameState.hasUpgrade('forge_bellows')).toBe(false);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(0);
       expect(gameState.inventory).toHaveLength(0);
 
       // Load
@@ -172,28 +172,28 @@ describe('GameFlow Integration', () => {
       expect(gameState.reputation).toBe(savedReputation);
       expect(gameState.getRaceReputation('goblin')).toBe(50);
       expect(gameState.getRaceReputation('human')).toBe(25);
-      expect(gameState.hasUpgrade('forge_bellows')).toBe(true);
-      expect(gameState.data.upgrades).toEqual(savedUpgrades);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(1);
+      expect(gameState.data.upgradeRanks).toEqual(savedUpgradeRanks);
       expect(gameState.inventory).toHaveLength(savedInventoryLength);
     });
   });
 
   describe('Upgrade purchase flow', () => {
     it('should buy upgrade, record it, and deduct coins', () => {
-      // Need tier 1 for forge_bellows (cost 150)
-      // T1 requires: goblin: 50, human: 50
-      gameState.addCoins(600, 'test');
-      gameState.addRaceReputation('goblin', 50);
-      gameState.addRaceReputation('human', 50);
+      // forge_bellows is tier 2, rank 1 costs 1500 (tier 3 threshold). T2 requires: 500 coins, goblin: 75, human: 75, elf: 40
+      gameState.addCoins(2000, 'test');
+      gameState.addRaceReputation('goblin', 75);
+      gameState.addRaceReputation('human', 75);
+      gameState.addRaceReputation('elf', 40);
 
       const coinsBefore = gameState.coins;
-      expect(gameState.hasUpgrade('forge_bellows')).toBe(false);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(0);
 
       const success = purchaseUpgrade('forge_bellows');
       expect(success).toBe(true);
 
-      expect(gameState.hasUpgrade('forge_bellows')).toBe(true);
-      expect(gameState.coins).toBe(coinsBefore - 150);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(1);
+      expect(gameState.coins).toBe(coinsBefore - 1500);
     });
 
     it('should fail to purchase upgrade without enough coins', () => {
@@ -203,21 +203,21 @@ describe('GameFlow Integration', () => {
 
       const success = purchaseUpgrade('forge_bellows');
       expect(success).toBe(false);
-      expect(gameState.hasUpgrade('forge_bellows')).toBe(false);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(0);
       expect(gameState.coins).toBe(100);
     });
 
-    it('should fail to purchase same upgrade twice', () => {
-      gameState.addCoins(400, 'test');
-      gameState.addRaceReputation('goblin', 50);
-      gameState.addRaceReputation('human', 50);
+    it('should allow rank-up purchases up to maxRank', () => {
+      gameState.addCoins(50000, 'test');
+      gameState.addRaceReputation('goblin', 75);
+      gameState.addRaceReputation('human', 75);
+      gameState.addRaceReputation('elf', 40);
 
       const first = purchaseUpgrade('forge_bellows');
       const second = purchaseUpgrade('forge_bellows');
-
       expect(first).toBe(true);
-      expect(second).toBe(false);
-      expect(gameState.data.upgrades).toHaveLength(1);
+      expect(second).toBe(true);
+      expect(gameState.getUpgradeRank('forge_bellows')).toBe(2);
     });
   });
 });

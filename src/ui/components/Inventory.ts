@@ -3,6 +3,7 @@ import { gameState, type InventoryItem } from '../../core/GameState.js';
 import { getGoodsById } from '../../market/Goods.js';
 import { QUALITY_LABELS } from '../../core/constants.js';
 import { showTooltip, hideTooltip } from './Tooltip.js';
+import { attachHoverSound } from '../../audio/attachHoverSound.js';
 
 export class Inventory {
   private el: HTMLElement;
@@ -43,7 +44,8 @@ export class Inventory {
       const card = document.createElement('div');
       card.className = 'goods-card';
       const qualityLabel = QUALITY_LABELS[Math.min(item.quality, QUALITY_LABELS.length - 1)];
-      const qualityClass = item.quality >= 3 ? 'gold-text' : item.quality >= 2 ? 'green-text' : 'ink-dim';
+      const qualityClasses = ['quality-shoddy', 'quality-passable', 'quality-fine', 'quality-superior', 'quality-masterwork'];
+      const qualityClass = qualityClasses[Math.min(item.quality, qualityClasses.length - 1)];
 
       card.innerHTML = `
         <div class="goods-card__icon">${goods.icon}</div>
@@ -57,7 +59,7 @@ export class Inventory {
       });
 
       card.addEventListener('mouseenter', () => {
-        const enchantText = item.enchanted ? `<br><span class="blue-text">Enchanted (x${item.enchantMultiplier.toFixed(1)})</span>` : '';
+        const enchantText = item.enchanted ? `<br><span class="enchanted-pink">Enchanted (x${item.enchantMultiplier.toFixed(1)})</span>` : '';
         showTooltip(card, `
           <strong style="color: var(--gold)">${goods.name}</strong><br>
           Quality: ${qualityLabel}${enchantText}<br>
@@ -66,6 +68,7 @@ export class Inventory {
       });
 
       card.addEventListener('mouseleave', hideTooltip);
+      attachHoverSound(card);
       this.gridEl.appendChild(card);
     }
   }

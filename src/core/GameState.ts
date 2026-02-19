@@ -23,7 +23,9 @@ export interface GameStateData {
   currentTier: number;
   inventory: InventoryItem[];
   stallSlots: number;
-  upgrades: string[];
+  /** @deprecated Use upgradeRanks. Present only for migration. */
+  upgrades?: string[];
+  upgradeRanks: Record<string, number>;
   unlockedRecipes: string[];
   milestones: string[];
   totalEarned: number;
@@ -42,7 +44,7 @@ function createDefaultState(): GameStateData {
     currentTier: 0,
     inventory: [],
     stallSlots: STALL_BASE_SLOTS,
-    upgrades: [],
+    upgradeRanks: {},
     unlockedRecipes: ['iron_dagger', 'wooden_shield', 'herb_pouch'],
     milestones: [],
     totalEarned: 0,
@@ -164,15 +166,14 @@ class GameState {
     return item;
   }
 
-  addUpgrade(upgradeId: string): void {
-    if (!this.state.upgrades.includes(upgradeId)) {
-      this.state.upgrades.push(upgradeId);
-      eventBus.emit('upgrade:purchased', { upgradeId });
-    }
+  getUpgradeRank(upgradeId: string): number {
+    return this.state.upgradeRanks[upgradeId] ?? 0;
   }
 
-  hasUpgrade(upgradeId: string): boolean {
-    return this.state.upgrades.includes(upgradeId);
+  addUpgradeRank(upgradeId: string): void {
+    const prev = this.state.upgradeRanks[upgradeId] ?? 0;
+    this.state.upgradeRanks[upgradeId] = prev + 1;
+    eventBus.emit('upgrade:purchased', { upgradeId });
   }
 
   unlockRecipe(recipeId: string): void {
@@ -239,17 +240,17 @@ class GameState {
     if (!goods) return 0;
     let duration = goods.cooldown;
 
-    if (this.hasUpgrade('quick_hands') && goods.tier <= 1) {
-      duration *= 0.75;
+    if (this.getUpgradeRank('quick_hands') > 0 && goods.tier >= 1 && goods.tier <= 2) {
+      duration *= 1 - this.getUpgradeRank('quick_hands') * 0.06;
     }
-    if (this.hasUpgrade('efficient_workshop') && goods.craftable) {
-      duration *= 0.80;
+    if (this.getUpgradeRank('efficient_workshop') > 0 && goods.craftable) {
+      duration *= 1 - this.getUpgradeRank('efficient_workshop') * 0.08;
     }
-    if (this.hasUpgrade('supply_chain') && !goods.craftable) {
-      duration *= 0.80;
+    if (this.getUpgradeRank('supply_chain') > 0 && !goods.craftable) {
+      duration *= 1 - this.getUpgradeRank('supply_chain') * 0.07;
     }
-    if (this.hasUpgrade('master_supplier')) {
-      duration *= 0.75;
+    if (this.getUpgradeRank('master_supplier') > 0) {
+      duration *= 1 - this.getUpgradeRank('master_supplier') * 0.10;
     }
 
     return Math.round(duration);
@@ -292,7 +293,20 @@ class GameState {
         };
         delete parsed.reputation;
       }
-      this.state = { ...createDefaultState(), ...parsed };
+      // Migrate upgrades[] to upgradeRanks (v2 -> v3)
+      if (parsed.upgrades && Array.isArray(parsed.upgrades) && (!parsed.upgradeRanks || Object.keys(parsed.upgradeRanks).length === 0)) {
+        parsed.upgradeRanks = {};
+        for (const id of parsed.upgrades) {
+          parsed.upgradeRanks[id] = 1;
+        }
+        delete parsed.upgrades;
+      }
+      const base = createDefaultState();
+      this.state = {
+        ...base,
+        ...parsed,
+        upgradeRanks: parsed.upgradeRanks ?? base.upgradeRanks,
+      };
       return true;
     } catch {
       return false;

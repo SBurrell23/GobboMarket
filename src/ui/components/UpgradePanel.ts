@@ -8,6 +8,8 @@ import { getGoodsById } from '../../market/Goods.js';
 import { getCompletedMilestones, getAllMilestones } from '../../progression/Milestones.js';
 import { getReputationLevel } from '../../progression/Reputation.js';
 import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
+import { attachHoverSound } from '../../audio/attachHoverSound.js';
+import { soundManager } from '../../audio/SoundManager.js';
 
 export type PanelMode = 'upgrades' | 'progress';
 
@@ -212,7 +214,10 @@ export class UpgradePanel {
       list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
       for (const upgrade of upgrades) {
-        const canAfford = gameState.coins >= upgrade.cost;
+        const canAfford = gameState.coins >= upgrade.nextCost;
+        const rankLabel = upgrade.id === 'wider_stall'
+          ? `Slots: ${upgrade.currentRank + 4}`
+          : `Rank ${upgrade.currentRank}/${upgrade.maxRank}`;
         const item = document.createElement('div');
         item.style.cssText = `
           display: flex; align-items: center; gap: 8px; padding: 8px;
@@ -225,11 +230,25 @@ export class UpgradePanel {
         item.innerHTML = `
           <span style="font-size: 1.3rem;">${upgrade.icon}</span>
           <div style="flex: 1;">
-            <div style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</span>
+              <span style="
+                display: inline-flex; align-items: center; padding: 1px 5px;
+                background: linear-gradient(135deg, var(--parchment-lighter) 0%, var(--parchment-light) 100%);
+                border: 1px solid var(--gold-dim);
+                border-radius: 4px;
+                color: var(--gold);
+                font-family: var(--font-display);
+                font-size: 0.65rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+              ">${rankLabel}</span>
+            </div>
             <div style="color: var(--ink-dim); font-size: 0.8rem;">${upgrade.description}</div>
           </div>
           <div style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display); white-space: nowrap;">
-            ${upgrade.cost.toLocaleString()} 🪙
+            ${upgrade.nextCost.toLocaleString()} 🪙
           </div>
         `;
 
@@ -237,10 +256,12 @@ export class UpgradePanel {
           item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
           item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
           item.addEventListener('click', () => {
+            soundManager.play('upgrade_click');
             purchaseUpgrade(upgrade.id);
             this.render();
           });
         }
+        attachHoverSound(item);
 
         list.appendChild(item);
       }
@@ -291,10 +312,12 @@ export class UpgradePanel {
           item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--gold-dim)'; });
           item.addEventListener('mouseleave', () => { item.style.borderColor = 'var(--parchment-lighter)'; });
           item.addEventListener('click', () => {
+            soundManager.play('upgrade_click');
             purchaseRecipe(recipe.id);
             this.render();
           });
         }
+        attachHoverSound(item);
 
         list.appendChild(item);
       }

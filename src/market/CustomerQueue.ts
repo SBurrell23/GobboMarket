@@ -1,8 +1,7 @@
 import { eventBus } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
+import { TIER_MAX_CUSTOMERS, TIER_NAMES, TIER_RACE_REPUTATION_REQUIRED } from '../core/constants.js';
 import { type Customer, createCustomer, getAvailableCustomerTypes } from './Customer.js';
-
-const MAX_QUEUE_SIZE = 5;
 const BASE_SPAWN_INTERVAL = 5000;
 const MIN_SPAWN_INTERVAL = 2500;
 
@@ -36,9 +35,8 @@ export class CustomerQueue {
       MIN_SPAWN_INTERVAL,
       BASE_SPAWN_INTERVAL - tier * 1000
     );
-    if (gameState.hasUpgrade('market_sign')) {
-      interval = Math.round(interval * 0.85);
-    }
+    interval *= 1 - gameState.getUpgradeRank('market_sign') * 0.05;
+    interval = Math.round(interval);
     const jitter = (Math.random() - 0.5) * interval * 0.3;
     this.spawnTimer = setTimeout(() => {
       this.spawnCustomer();
@@ -46,10 +44,32 @@ export class CustomerQueue {
     }, interval + jitter);
   }
 
+  private pickWeightedCustomerType(types: string[]): string {
+    const currentTier = gameState.currentTier;
+    const nextTier = currentTier + 1;
+    if (nextTier >= TIER_NAMES.length) {
+      return types[Math.floor(Math.random() * types.length)];
+    }
+    const raceReqs = TIER_RACE_REPUTATION_REQUIRED[nextTier] ?? {};
+    const weights = types.map((type) => {
+      const req = raceReqs[type];
+      if (req == null) return 1;
+      return gameState.getRaceReputation(type) < req ? 2.5 : 1;
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < types.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return types[i];
+    }
+    return types[types.length - 1];
+  }
+
   private spawnCustomer(): void {
-    if (this.queue.length >= MAX_QUEUE_SIZE) return;
+    const maxCustomers = TIER_MAX_CUSTOMERS[Math.min(gameState.currentTier, TIER_MAX_CUSTOMERS.length - 1)];
+    if (this.queue.length >= maxCustomers) return;
     const types = getAvailableCustomerTypes(gameState.currentTier);
-    const type = types[Math.floor(Math.random() * types.length)];
+    const type = this.pickWeightedCustomerType(types);
     const customer = createCustomer(type);
     this.queue.push(customer);
     eventBus.emit('customer:arrived', { customerId: customer.id, type: customer.type });

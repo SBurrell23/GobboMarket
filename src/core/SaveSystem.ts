@@ -50,9 +50,10 @@ export class SaveSystem {
   }
 
   private migrate(envelope: SaveEnvelope): boolean {
-    if (envelope.version === 1) {
+    if (envelope.version === 1 || envelope.version === 2) {
       // v1 -> v2: reputation (number) -> raceReputation (Record)
-      // deserialize handles the migration internally
+      // v2 -> v3: upgrades (string[]) -> upgradeRanks (Record<string, number>)
+      // deserialize handles both migrations internally
       const success = gameState.deserialize(envelope.data);
       if (success) {
         gameState.cleanExpiredCooldowns();

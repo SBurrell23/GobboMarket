@@ -16,6 +16,7 @@ export interface GameEvents {
   'upgrade:purchased': { upgradeId: string };
   'recipe:unlocked': { recipeId: string };
   'milestone:reached': { milestoneId: string };
+  'cooldown:ready': { goodsId: string };
   'game:saved': Record<string, never>;
   'game:loaded': Record<string, never>;
   'screen:changed': { screen: string };

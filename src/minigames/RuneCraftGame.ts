@@ -1,6 +1,7 @@
 import type { Minigame, MinigameResult } from './MinigameBase.js';
 import { RUNECRAFT_TIME_SECONDS, RUNECRAFT_ENCHANT_MULTIPLIER } from '../core/constants.js';
 import { gameState } from '../core/GameState.js';
+import { soundManager } from '../audio/SoundManager.js';
 
 const RUNE_SYMBOLS = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ'];
 
@@ -20,9 +21,7 @@ export class RuneCraftGame implements Minigame {
 
   constructor(tier: number = 0) {
     this.tier = tier;
-    let bonus = 0;
-    if (gameState.hasUpgrade('keen_eye')) bonus += 5;
-    if (gameState.hasUpgrade('jewelers_loupe')) bonus += 5;
+    const bonus = gameState.getUpgradeRank('keen_eye') * 4;
     this.timeLeft = RUNECRAFT_TIME_SECONDS + tier * 5 + bonus;
   }
 
@@ -41,7 +40,7 @@ export class RuneCraftGame implements Minigame {
     this.emptyIndex = 8;
 
     // Shuffle by performing random valid slides (guarantees solvability)
-    const libraryReduction = gameState.hasUpgrade('rune_library') ? 10 : 0;
+    const libraryReduction = gameState.getUpgradeRank('rune_library') * 6;
     const shuffleMoves = Math.max(15, 30 + this.tier * 10 - libraryReduction);
     for (let i = 0; i < shuffleMoves; i++) {
       const neighbors = this.getNeighbors(this.emptyIndex);
@@ -182,7 +181,10 @@ export class RuneCraftGame implements Minigame {
     finishBtn.className = 'btn btn-subtle';
     finishBtn.style.cssText = 'display: block; margin: 16px auto 0; font-size: 0.9rem;';
     finishBtn.textContent = `Finish Early (${matchCount}/9 correct)`;
-    finishBtn.addEventListener('click', () => this.finishGame(false));
+    finishBtn.addEventListener('click', () => {
+      soundManager.play('enchant_finish_early');
+      this.finishGame(false);
+    });
     wrapper.appendChild(finishBtn);
 
     this.container.appendChild(wrapper);
@@ -206,6 +208,7 @@ export class RuneCraftGame implements Minigame {
     if (this.finished) return;
     if (!this.getNeighbors(this.emptyIndex).includes(index)) return;
 
+    soundManager.play('enchant_tile_move');
     this.swapTiles(index, this.emptyIndex);
     this.emptyIndex = index;
     this.moves++;
@@ -236,38 +239,18 @@ export class RuneCraftGame implements Minigame {
     if (this.timerInterval) clearInterval(this.timerInterval);
 
     if (!this.container) return;
-    this.container.innerHTML = '';
 
     const matchRatio = this.countMatches() / 9;
-    const multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER + this.tier * 0.1 : 1 + matchRatio * (RUNECRAFT_ENCHANT_MULTIPLIER - 1);
+    let multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER + this.tier * 0.1 : 1 + matchRatio * (RUNECRAFT_ENCHANT_MULTIPLIER - 1);
+    multiplier *= 1 + gameState.getUpgradeRank('enchanting_table') * 0.15;
 
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'text-align: center; padding: 16px;';
-
-    wrapper.innerHTML = `
-      <p style="font-family: var(--font-display); color: ${won ? 'var(--green-bright)' : 'var(--accent-bright)'}; font-size: 1.3rem; margin-bottom: 16px;">
-        ${won ? 'Enchantment Complete!' : "Time's Up!"}
-      </p>
-      <p style="color: var(--ink); margin-bottom: 8px;">
-        ${won ? `Solved in ${this.moves} moves` : `Placed ${this.countMatches()} of 9 runes correctly`}
-      </p>
-      <p style="color: var(--blue-bright); font-size: 1.1rem; margin-bottom: 16px;">
-        Enchant multiplier: x${multiplier.toFixed(2)}
-      </p>
-      <button class="btn btn-gold done-btn">Continue</button>
-    `;
-
-    this.container.appendChild(wrapper);
-
-    wrapper.querySelector('.done-btn')!.addEventListener('click', () => {
-      const result: MinigameResult = {
-        score: won ? 100 : Math.round(matchRatio * 100),
-        quality: 0,
-        multiplier,
-        completed: true,
-      };
-      if (this.onComplete) this.onComplete(result);
-    });
+    const result: MinigameResult = {
+      score: won ? 100 : Math.round(matchRatio * 100),
+      quality: 0,
+      multiplier,
+      completed: true,
+    };
+    if (this.onComplete) this.onComplete(result);
   }
 
   destroy(): void {

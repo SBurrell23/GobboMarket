@@ -2,6 +2,7 @@ import type { Minigame, MinigameResult } from './MinigameBase.js';
 import { gameState } from '../core/GameState.js';
 import { calculateReputationGain } from '../progression/Reputation.js';
 import type { Customer } from '../market/Customer.js';
+import { soundManager } from '../audio/SoundManager.js';
 
 export class HaggleGame implements Minigame {
   readonly type = 'haggle';
@@ -32,14 +33,7 @@ export class HaggleGame implements Minigame {
     this.customerRoll = minRoll + Math.floor(Math.random() * (20 - minRoll)) + 1;
     this.customerRoll = Math.min(20, Math.max(1, this.customerRoll));
 
-    // Haggler's Dice: reduce customer roll by 2
-    if (gameState.hasUpgrade('hagglers_dice')) {
-      this.customerRoll = Math.max(1, this.customerRoll - 2);
-    }
-    // Silver Tongue: reduce customer roll by another 3
-    if (gameState.hasUpgrade('silver_tongue')) {
-      this.customerRoll = Math.max(1, this.customerRoll - 3);
-    }
+    this.customerRoll = Math.max(1, this.customerRoll - gameState.getUpgradeRank('hagglers_dice'));
 
     this.phase = 'player-turn';
     this.renderPlayerTurn();
@@ -91,10 +85,10 @@ export class HaggleGame implements Minigame {
         </p>
       `}
 
-      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: ${canWin ? 'column' : 'row'}; align-items: center; gap: 12px; justify-content: center;">
         ${canWin ? `
-          <button class="btn btn-gold" data-action="roll">🎲 Roll d6</button>
-          <button class="btn btn-subtle" data-action="settle">🤝 Settle (Medium Deal)</button>
+          <button class="btn btn-gold" data-action="roll" style="min-width: 10rem; margin-bottom: 8px;">🎲 Roll d6</button>
+          <button class="btn btn-subtle" data-action="settle">🤝 Settle</button>
         ` : `
           <button class="btn btn-gold" data-action="claim">🪙 Claim Great Deal!</button>
         `}
@@ -109,6 +103,7 @@ export class HaggleGame implements Minigame {
   }
 
   doPlayerRoll(): void {
+    soundManager.play('haggle_roll');
     const roll = Math.floor(Math.random() * 6) + 1;
     this.playerRolls.push(roll);
 
@@ -127,18 +122,21 @@ export class HaggleGame implements Minigame {
   }
 
   private bust(finalRoll: number): void {
+    soundManager.play('haggle_bust');
     this.outcome = 'bust';
     this.phase = 'result';
     this.showResult(finalRoll);
   }
 
   private settle(): void {
+    soundManager.play('haggle_settle');
     this.outcome = 'settle';
     this.phase = 'result';
     this.showResult(null);
   }
 
   private win(): void {
+    soundManager.play('haggle_win');
     this.outcome = 'win';
     this.phase = 'result';
     this.showResult(null);
