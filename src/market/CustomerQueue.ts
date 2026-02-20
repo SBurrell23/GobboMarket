@@ -54,7 +54,7 @@ export class CustomerQueue {
     const weights = types.map((type) => {
       const req = raceReqs[type];
       if (req == null) return 1;
-      return gameState.getRaceReputation(type) < req ? 2.5 : 1;
+      return gameState.getRaceReputation(type) < req ? 4 : 1;
     });
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;

@@ -30,12 +30,12 @@ export const RECIPES: RecipeDefinition[] = [
   { id: 'strength_tonic', name: 'Strength Tonic', goodsId: 'strength_tonic', cost: 900, tier: 3 },
 
   // Tier 4
-  { id: 'mithril_blade', name: 'Mithril Blade', goodsId: 'mithril_blade', cost: 2500, tier: 4 },
+  { id: 'mithril_blade', name: 'Mithril Axe', goodsId: 'mithril_blade', cost: 2500, tier: 4 },
   { id: 'dragon_scale_mail', name: 'Dragon Scale Mail', goodsId: 'dragon_scale_mail', cost: 3000, tier: 4 },
   { id: 'phoenix_tears', name: 'Phoenix Tears', goodsId: 'phoenix_tears', cost: 2000, tier: 4 },
 
   // Tier 5
-  { id: 'runic_greatsword', name: 'Runic Greatsword', goodsId: 'runic_greatsword', cost: 6000, tier: 5 },
+  { id: 'runic_greatsword', name: 'Runic Trident', goodsId: 'runic_greatsword', cost: 6000, tier: 5 },
   { id: 'arcane_ward', name: 'Arcane Ward', goodsId: 'arcane_ward', cost: 7000, tier: 5 },
   { id: 'invisibility_draught', name: 'Invisibility Draught', goodsId: 'invisibility_draught', cost: 5000, tier: 5 },
 

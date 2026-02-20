@@ -3,8 +3,8 @@ import { gameState, type InventoryItem } from '../../core/GameState.js';
 import { customerQueue } from '../../market/CustomerQueue.js';
 import type { Customer } from '../../market/Customer.js';
 import { getGoodsById, getCraftableGoods, getBuyableGoods, type GoodsDefinition } from '../../market/Goods.js';
-import { calculateBuyPrice, calculateSellPrice } from '../../market/PricingEngine.js';
-import { QUALITY_LABELS, REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUSES } from '../../core/constants.js';
+import { calculateBuyPrice, calculateSellPrice, estimateValue } from '../../market/PricingEngine.js';
+import { QUALITY_LABELS, REPUTATION_QUALITY_BONUSES } from '../../core/constants.js';
 import { ForgeGame } from '../../minigames/ForgeGame.js';
 import { HaggleGame } from '../../minigames/HaggleGame.js';
 import { ReactionTimeGame } from '../../minigames/ReactionTimeGame.js';
@@ -280,7 +280,7 @@ export class MarketStall {
         const card = document.createElement('div');
         card.className = `goods-card${item.enchanted ? ' goods-card--enchanted' : ''}${cust ? ' goods-card--sellable' : ''}`;
 
-        let priceHtml = `<div class="goods-card__price">~${Math.round(item.basePrice * (item.enchanted ? item.enchantMultiplier : 1))} 🪙</div>`;
+        let priceHtml = `<div class="goods-card__price">~${estimateValue(item)} 🪙</div>`;
         if (cust) {
           const priceCalc = calculateSellPrice(item, cust);
           const prefTag = isDesired
@@ -448,16 +448,15 @@ export class MarketStall {
       : customer.budgetMultiplier >= 1.0 ? 'var(--ink-dim)'
       : 'var(--accent-bright)';
 
-    const raceName = customer.type.toUpperCase();
+    const raceName = customer.type.charAt(0).toUpperCase() + customer.type.slice(1).toLowerCase();
     const wantsPlural = CATEGORY_PLURAL[customer.desiredCategory] ?? customer.desiredCategory.toUpperCase();
-    const baseRep = REPUTATION_PER_SALE_BASE;
 
     card.innerHTML = `
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
-        <div class="customer-card__name">${customer.name} <span style="color: var(--ink-dim);">the</span> <span style="color: var(--ink); font-size: 0.85rem;">${raceName}</span> <span style="color: var(--green-bright, #4ade80); font-size: 0.72rem;">(+${baseRep})</span></div>
+        <div class="customer-card__name">${customer.name} <span style="color: var(--ink-dim);">wants</span> <span style="color: var(--gold); font-size: 0.85rem;">${wantsPlural}</span></div>
         <div style="font-size: 0.75rem; display: flex; gap: 8px; flex-wrap: wrap;">
-          <span style="color: var(--ink-dim);">Wants: <span style="color: var(--gold); font-family: var(--font-body); letter-spacing: 0.5px;">${wantsPlural}</span></span>
+          <span style="color: var(--ink);">⭐ ${raceName}</span>
           <span style="color: ${haggleColor};">🎲 ${haggleLabel}</span>
           <span style="color: ${budgetColor};">💰 ${budgetLabel}</span>
         </div>
@@ -627,7 +626,8 @@ export class MarketStall {
       eventBus.emit('customer:left', { customerId: customer.id, satisfied: true });
 
       this.hideOverlay();
-      this.render();
+      this.renderStall();
+      this.renderCustomers();
       this.showSaleToast(priceCalc.finalPrice);
       awardReputation(item.quality, result.haggleOutcome ?? 'settle', customer.type);
       this.showNewMilestones();
@@ -681,6 +681,9 @@ export class MarketStall {
         </p>
         <p style="color: var(--ink-dim); margin-bottom: 24px;">
           Haggle wins: ${gameState.data.haggleWins} | Total earned: ${gameState.data.totalEarned.toLocaleString()} 🪙
+        </p>
+        <p style="color: var(--gold); font-size: 0.95rem; margin-bottom: 24px;">
+          Send a screenshot of this modal to Steven to receive your 1,000,000 cash prize!
         </p>
         <button class="btn btn-gold close-btn">Continue Playing</button>
       </div>

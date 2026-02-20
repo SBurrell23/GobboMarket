@@ -49,7 +49,7 @@ describe('PricingEngine', () => {
         makeItem(),
         makeCustomer({ desiredCategory: 'food' })
       );
-      expect(matching.categoryBonus).toBe(1.25);
+      expect(matching.categoryBonus).toBe(1.35);
       expect(nonMatching.categoryBonus).toBe(1.0);
       expect(matching.finalPrice).toBeGreaterThan(nonMatching.finalPrice);
     });

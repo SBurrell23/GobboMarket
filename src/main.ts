@@ -253,7 +253,7 @@ function buildHelpContent(): string {
         <div class="panel help-card-span-4">
           <div class="panel-header"><h3>👥 Races</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
-            Each race prefers certain item categories and has unique traits. Desired items pay +25%, refused items pay 50%.
+            Each race prefers certain item categories and has unique traits. Desired items pay +35%, refused items pay 50%.
           </p>
           <table style="border-collapse: collapse; width: 100%; font-size: 0.82rem;">
             <thead>
@@ -318,7 +318,7 @@ function buildHelpContent(): string {
             </tbody>
           </table>
           <p style="color: var(--ink-dim); font-size: 0.88rem;">
-            Desired item +25% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Elf 1.2x, Goblin 0.8x.
+            Desired item +35% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Elf 1.2x, Goblin 0.8x.
           </p>
         </div>
 

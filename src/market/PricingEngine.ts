@@ -24,7 +24,7 @@ export function calculateSellPrice(
   const enchantMult = item.enchanted ? item.enchantMultiplier : 1.0;
 
   const categoryBonus = goods
-    ? (customer.desiredCategory === goods.category ? 1.25
+    ? (customer.desiredCategory === goods.category ? 1.35
       : customer.refusedCategory === goods.category ? 0.5
       : 1.0)
     : 1.0;
