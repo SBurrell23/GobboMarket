@@ -1,6 +1,6 @@
 import { eventBus } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
-import { TIER_MAX_CUSTOMERS, TIER_NAMES, TIER_RACE_REPUTATION_REQUIRED } from '../core/constants.js';
+import { CUSTOMER_TYPES, TIER_MAX_CUSTOMERS, TIER_NAMES, TIER_RACE_REPUTATION_REQUIRED } from '../core/constants.js';
 import { type Customer, createCustomer, getAvailableCustomerTypes } from './Customer.js';
 const BASE_SPAWN_INTERVAL = 5000;
 const MIN_SPAWN_INTERVAL = 2500;
@@ -44,7 +44,7 @@ export class CustomerQueue {
     }, interval + jitter);
   }
 
-  private pickWeightedCustomerType(types: string[]): string {
+  private pickWeightedCustomerType(types: (typeof CUSTOMER_TYPES)[number][]): (typeof CUSTOMER_TYPES)[number] {
     const currentTier = gameState.currentTier;
     const nextTier = currentTier + 1;
     if (nextTier >= TIER_NAMES.length) {
