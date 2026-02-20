@@ -1,12 +1,19 @@
 import { eventBus } from '../core/EventBus.js';
 import { soundManager } from './SoundManager.js';
 
+let currentScreen = 'market';
+
 export function initSounds(): void {
   soundManager.loadSettings();
   soundManager.startBackgroundMusic();
 
-  eventBus.on('customer:arrived', () => soundManager.play('customer_arrive'));
-  eventBus.on('customer:left', () => soundManager.play('customer_leave'));
+  eventBus.on('screen:changed', ({ screen }) => { currentScreen = screen; });
+  eventBus.on('customer:arrived', () => {
+    if (currentScreen === 'market') soundManager.play('customer_arrive');
+  });
+  eventBus.on('customer:left', () => {
+    if (currentScreen === 'market') soundManager.play('customer_leave');
+  });
   eventBus.on('coins:earned', () => soundManager.play('gold_earned'));
   eventBus.on('minigame:started', ({ type }) => {
     if (type === 'haggle') soundManager.play('haggle_open');

@@ -115,19 +115,20 @@ function startGame(app: HTMLElement): void {
 
   // Help screen
   const helpScreen = document.createElement('div');
-  helpScreen.style.cssText = 'padding: 16px 2.5%; max-width: 95%; width: 95%; margin: 0 auto; overflow-y: auto; height: 100%;';
+  helpScreen.className = 'help-screen';
+  helpScreen.style.cssText = 'padding: 12px 8px; width: 100%; min-width: 0; overflow-y: auto; height: 100%; box-sizing: border-box;';
   helpScreen.innerHTML = buildHelpContent();
   screenManager.register('help', helpScreen);
 
-  // Show initial screen
-  screenManager.show('market');
-
-  // Update active nav button
+  // Update active nav button when screen changes (register before show so initial state is set)
   eventBus.on('screen:changed', ({ screen }) => {
     nav.querySelectorAll('.game-nav__btn').forEach(btn => {
       (btn as HTMLElement).classList.toggle('active', (btn as HTMLElement).dataset.screen === screen);
     });
   });
+
+  // Show initial screen
+  screenManager.show('market');
 
   // Start customer queue
   customerQueue.start();
@@ -220,8 +221,8 @@ function buildHelpContent(): string {
   }).join('');
 
   return `
-    <div style="display: flex; flex-direction: column; gap: 20px; color: var(--ink); font-size: 0.92rem; line-height: 1.6;">
-      <div class="panel">
+    <div class="help-content help-mosaic" style="color: var(--ink); font-size: 0.92rem; line-height: 1.6;">
+      <div class="panel help-card-span-8">
         <div class="panel-header"><h3>📖 How to Play</h3></div>
         <p style="color: var(--ink-dim); margin-bottom: 8px;">
           Welcome to <strong style="color: var(--gold);">Gobbo Market</strong> — a fantasy merchant game where you buy, craft, enchant, and sell goods to build your fortune. The goal is to reach <strong style="color: var(--gold);">1,000,000 gold coins</strong>!
@@ -231,8 +232,7 @@ function buildHelpContent(): string {
         </p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div class="panel">
+        <div class="panel help-card-span-4">
           <div class="panel-header"><h3>👥 Races</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
             Each race prefers certain item categories and has unique traits. Desired items pay +25%, refused items pay 50%.
@@ -253,7 +253,7 @@ function buildHelpContent(): string {
           </table>
         </div>
 
-        <div class="panel">
+        <div class="panel help-card-span-4">
           <div class="panel-header"><h3>⭐ Item Quality</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
             Quality affects sell price and reputation. Earned from reaction time (buy) and forge timing (craft).
@@ -263,95 +263,115 @@ function buildHelpContent(): string {
               <tr>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Quality</th>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Sell</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Rep Bonus</th>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Description</th>
               </tr>
             </thead>
             <tbody style="color: var(--ink-dim);">
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-shoddy);">Shoddy</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.6x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Poor minigame performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-passable);">Passable</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Mediocre performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-fine);">Fine</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Decent performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-superior);">Superior</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.3x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Great performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-masterwork);">Masterwork</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.8x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Amazing performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-shoddy);">Shoddy</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.6x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Poor minigame performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-passable);">Passable</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Mediocre performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-fine);">Fine</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Decent performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-superior);">Superior</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.3x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+4</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Great performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-masterwork);">Masterwork</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.8x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+8</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Amazing performance</td></tr>
             </tbody>
           </table>
-          <p style="color: var(--ink-dim); margin-top: 8px; font-size: 0.82rem;">
-            Superior and Masterwork add bonus reputation per sale.
-          </p>
         </div>
 
-        <div class="panel">
+        <div class="panel help-card-span-4">
           <div class="panel-header"><h3>🎲 Customers & Haggling</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
+            Customers appear in the queue with desires for specific item categories. Click a customer, choose an item to sell, then play the <strong style="color: var(--gold);">Haggle minigame</strong>. The customer rolls a d20 — you keep rolling d6s to try to beat their total. Settle any time for a medium deal, but roll a 1 and you get a bad deal!
+          </p>
           <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
             <strong style="color: var(--gold);">Haggle skill</strong> affects the customer's d20 roll — higher skill means higher minimum. Each customer gets a random skill tier.
           </p>
-          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
-            <strong style="color: var(--gold);">Outcomes:</strong> Win = 1.5x, +5 rep. Settle = 1.0x–1.25x. Bust (roll 1) = 0.65x–0.85x.
-          </p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 0.82rem; margin-bottom: 8px;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Outcome</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Price</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Reputation</th>
+              </tr>
+            </thead>
+            <tbody style="color: var(--ink-dim);">
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Win</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.5x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+5</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Settle</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x–1.25x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">—</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Bust (roll 1)</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.65x–0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">—</td></tr>
+            </tbody>
+          </table>
           <p style="color: var(--ink-dim); font-size: 0.88rem;">
             Desired item +25% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Goblin 0.8x.
           </p>
         </div>
 
-        <div class="panel">
-          <div class="panel-header"><h3>📜 Reputation</h3></div>
-          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">
-            <strong style="color: var(--gold);">Earn:</strong> Base 8 per sale. +4 per quality rank above Fine (Superior +4, Masterwork +8). +5 for winning the haggle.
-          </p>
-          <p style="color: var(--ink-dim); font-size: 0.88rem;">
-            Reputation is tracked <strong>per race</strong>. Each market tier requires minimum reputation with specific races to unlock.
-          </p>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-
-        <div class="panel">
-          <div class="panel-header"><h3>🛒 Buying Goods</h3></div>
-          <p style="color: var(--ink-dim);">
-            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (2-7 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
-          </p>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header"><h3>⚒️ Crafting Items</h3></div>
-          <p style="color: var(--ink-dim);">
-            Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster!
-          </p>
-        </div>
-
-        <div class="panel">
+        <div class="panel help-card-span-4">
           <div class="panel-header"><h3>✨ Enchanting</h3></div>
-          <p style="color: var(--ink-dim);">
+          <p style="color: var(--ink-dim); margin-bottom: 12px;">
             Click an inventory item marked with ✨ to enchant it. This starts the <strong style="color: var(--gold);">Sliding Puzzle minigame</strong> — rearrange a 3×3 grid of rune tiles to match the target pattern before time runs out. Enchanted items sell for significantly more. You can finish early for partial credit.
           </p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 0.74rem; line-height: 1.2;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 2px 6px; text-align: left; color: var(--gold);">Tiles</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 2px 6px; text-align: left; color: var(--gold);">Multiplier</th>
+              </tr>
+            </thead>
+            <tbody style="color: var(--ink-dim);">
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">0/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.0x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.2x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.4x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.7x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">4/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.9x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">5/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.1x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">6/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.3x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">7/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.6x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">8/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.8x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">9/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3.0x+</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="panel">
-          <div class="panel-header"><h3>🎲 Selling & Haggling</h3></div>
+        <div class="panel help-card-span-2">
+          <div class="panel-header"><h3>📜 Reputation</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">Ways to earn reputation:</p>
+          <ul style="color: var(--ink-dim); font-size: 0.88rem; margin: 0 0 8px 0; display: flex; flex-direction: column; gap: 4px;">
+            <li>Base 8 reputation per sale</li>
+            <li>+4 per quality rank above Fine (Superior +4, Masterwork +8)</li>
+            <li>+5 for winning the haggle</li>
+          </ul>
+          <p style="color: var(--ink-dim); font-size: 0.88rem;">Reputation is tracked per race. Each market tier requires minimum reputation with specific races to unlock.</p>
+        </div>
+
+        <div class="panel help-card-span-2">
+          <div class="panel-header"><h3>🛒⚒️ Crafting Items & Buying Goods</h3></div>
+          <p style="color: var(--ink-dim); margin-bottom: 12px;">
+            <strong style="color: var(--gold);">Buying:</strong> On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (2-7 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
+          </p>
           <p style="color: var(--ink-dim);">
-            Customers appear in the queue with desires for specific item categories. Click a customer, choose an item to sell, then play the <strong style="color: var(--gold);">Haggle minigame</strong>. The customer rolls a d20 — you keep rolling d6s to try to beat their total. Settle any time for a medium deal, but roll a 1 and you get a bad deal!
+            <strong style="color: var(--gold);">Crafting:</strong> Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster!
           </p>
         </div>
 
-        <div class="panel">
+        <div class="panel help-card-span-2">
           <div class="panel-header"><h3>📈 Progression</h3></div>
-          <p style="color: var(--ink-dim);">
-            Selling items earns you <strong style="color: var(--gold);">coins</strong> and <strong style="color: var(--gold);">reputation</strong>. Both are needed to unlock higher market tiers, which give access to better goods, new customer types, upgrades, and recipes. Check the Upgrades tab to buy upgrades and recipes, and the Progress tab to see your tier requirements and milestones.
-          </p>
+          <ul style="color: var(--ink-dim); margin: 0; display: flex; flex-direction: column; gap: 6px;">
+            <li>Higher tier items will sell for significantly more coins</li>
+            <li>Reputation gains are NOT tied to the tier of an item. A T1 and T8 item both give the same base reputation when sold.</li>
+            <li>Both coins and reputation are needed to unlock higher market tiers</li>
+            <li>Check the Upgrades tab for upgrades and recipes. Check the Progress tab for tier requirements and milestones</li>
+          </ul>
         </div>
 
-        <div class="panel">
+        <div class="panel help-card-span-2">
           <div class="panel-header"><h3>🏆 Milestones</h3></div>
           <p style="color: var(--ink-dim);">
             As you play, you'll unlock milestones for crafting, selling, earning gold, and reaching new market tiers. Track your progress on the Progress tab. Reach the final milestone — <strong style="color: var(--gold);">Goblin Tycoon</strong> — to win the game!
           </p>
         </div>
 
-      </div>
-
-      <div class="panel">
+      <div class="panel help-card-span-8">
         <div class="panel-header"><h3>💡 Tips</h3></div>
-        <ul style="color: var(--ink-dim); padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+        <ul style="color: var(--ink-dim); display: flex; flex-direction: column; gap: 6px;">
           <li>Buy early-game upgrades as soon as you can — they compound quickly.</li>
           <li>Higher quality items sell for more, so practice the forge timing.</li>
           <li>Enchanting an item before selling it can dramatically boost its price.</li>
