@@ -3,8 +3,8 @@ import { QUALITY_LABELS } from '../core/constants.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 
-const WAIT_MIN_MS = 2000;
-const WAIT_MAX_MS = 7000;
+const WAIT_MIN_MS = 1000;
+const WAIT_MAX_MS = 6000;
 const REACTION_MASTERWORK_MS = 250;
 const REACTION_SUPERIOR_MS = 300;
 const REACTION_FINE_MS = 450;
@@ -53,9 +53,6 @@ export class ReactionTimeGame implements Minigame {
     wrapper.id = 'reaction-game-area';
 
     wrapper.innerHTML = `
-      <p style="font-family: var(--font-display); color: var(--ink-dim); font-size: 1.2rem; margin-bottom: 12px;">
-        Wait for the right moment to buy...
-      </p>
       <p style="font-family: var(--font-display); color: var(--gold); font-size: 2rem; margin-bottom: 12px;">
         Wait...
       </p>
@@ -75,6 +72,7 @@ export class ReactionTimeGame implements Minigame {
     };
     window.addEventListener('keydown', this.keyHandler);
 
+    soundManager.playLoop('reaction_clock_tick', { volume: 0.4 });
     const delay = WAIT_MIN_MS + Math.random() * (WAIT_MAX_MS - WAIT_MIN_MS);
     this.waitTimeout = setTimeout(() => this.showBuy(), delay);
   }
@@ -83,6 +81,8 @@ export class ReactionTimeGame implements Minigame {
     this.waitTimeout = null;
     if (!this.container || this.phase !== 'waiting') return;
 
+    soundManager.stopLoop('reaction_clock_tick');
+    soundManager.play('reaction_buy');
     this.phase = 'ready';
 
     const area = this.container.querySelector('#reaction-game-area');
@@ -107,6 +107,7 @@ export class ReactionTimeGame implements Minigame {
     this.removeInputHandlers();
 
     const wasEarly = this.phase === 'waiting';
+    if (wasEarly) soundManager.stopLoop('reaction_clock_tick');
     const reactionMs = wasEarly ? 0 : Math.round(performance.now() - this.readyAt);
     const quality = reactionMsToQuality(reactionMs, wasEarly);
     const score = wasEarly ? 0 : Math.max(0, Math.round(100 - reactionMs / 5));
@@ -159,6 +160,7 @@ export class ReactionTimeGame implements Minigame {
   }
 
   destroy(): void {
+    soundManager.stopLoop('reaction_clock_tick');
     if (this.waitTimeout) {
       clearTimeout(this.waitTimeout);
       this.waitTimeout = null;

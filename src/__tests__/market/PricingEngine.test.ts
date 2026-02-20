@@ -24,7 +24,7 @@ function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     desiredCategory: 'weapon',
     refusedCategory: 'food',
     patience: 5,
-    haggleSkill: 0.5,
+    haggleTier: 'medium',
     budgetMultiplier: 1.0,
     arrivedAt: Date.now(),
     ...overrides,
@@ -36,7 +36,7 @@ describe('PricingEngine', () => {
     it('should calculate base price with quality multiplier', () => {
       const result = calculateSellPrice(makeItem({ quality: 2 }), makeCustomer());
       expect(result.basePrice).toBe(15);
-      expect(result.qualityMultiplier).toBe(1.0);
+      expect(result.qualityMultiplier).toBe(1.2);
       expect(result.finalPrice).toBeGreaterThan(0);
     });
 

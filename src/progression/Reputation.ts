@@ -1,19 +1,25 @@
 import { gameState } from '../core/GameState.js';
 import {
   REPUTATION_PER_SALE_BASE,
-  REPUTATION_QUALITY_BONUS,
+  REPUTATION_QUALITY_BONUSES,
   REPUTATION_HAGGLE_WIN_BONUS,
+  REPUTATION_HAGGLE_SETTLE_BONUS,
+  REPUTATION_HAGGLE_BUST_PENALTY,
 } from '../core/constants.js';
 
-export function calculateReputationGain(quality: number, haggleWon: boolean): number {
+export type HaggleOutcome = 'win' | 'settle' | 'bust';
+
+export function calculateReputationGain(quality: number, haggleOutcome: HaggleOutcome): number {
   let rep = REPUTATION_PER_SALE_BASE;
-  if (quality >= 3) rep += REPUTATION_QUALITY_BONUS * (quality - 2);
-  if (haggleWon) rep += REPUTATION_HAGGLE_WIN_BONUS;
+  rep += REPUTATION_QUALITY_BONUSES[quality] ?? 0;
+  if (haggleOutcome === 'win') rep += REPUTATION_HAGGLE_WIN_BONUS;
+  else if (haggleOutcome === 'settle') rep += REPUTATION_HAGGLE_SETTLE_BONUS;
+  else if (haggleOutcome === 'bust') rep -= REPUTATION_HAGGLE_BUST_PENALTY;
   return rep;
 }
 
-export function awardReputation(quality: number, haggleWon: boolean, customerRace: string): number {
-  const rep = calculateReputationGain(quality, haggleWon);
+export function awardReputation(quality: number, haggleOutcome: HaggleOutcome, customerRace: string): number {
+  const rep = calculateReputationGain(quality, haggleOutcome);
   gameState.addRaceReputation(customerRace, rep);
   return rep;
 }

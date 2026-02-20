@@ -12,7 +12,7 @@ export const RECIPES: RecipeDefinition[] = [
   // Tier 0 - default unlocked
   { id: 'iron_dagger', name: 'Iron Dagger', goodsId: 'iron_dagger', cost: 0, tier: 0 },
   { id: 'wooden_shield', name: 'Wooden Shield', goodsId: 'wooden_shield', cost: 0, tier: 0 },
-  { id: 'herb_pouch', name: 'Herb Drink', goodsId: 'herb_pouch', cost: 0, tier: 0 },
+  { id: 'herb_pouch', name: 'Herb Tincture', goodsId: 'herb_pouch', cost: 0, tier: 0 },
 
   // Tier 1
   { id: 'steel_sword', name: 'Steel Sword', goodsId: 'steel_sword', cost: 100, tier: 1 },

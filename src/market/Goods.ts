@@ -15,7 +15,7 @@ const ALL_GOODS: GoodsDefinition[] = [
   // Tier 0 - Muddy Alley (Forge 36s / Buy 24s)
   { id: 'iron_dagger', name: 'Iron Dagger', icon: '🗡️', basePrice: 15, category: 'weapon', tier: 0, description: 'A simple iron dagger. Sharp enough.', craftable: true, materialCost: 8, cooldown: 36 },
   { id: 'wooden_shield', name: 'Wooden Shield', icon: '🛡️', basePrice: 12, category: 'armor', tier: 0, description: 'Rough-hewn pine shield.', craftable: true, materialCost: 6, cooldown: 36 },
-  { id: 'herb_pouch', name: 'Herb Drink', icon: '🌿', basePrice: 8, category: 'potion', tier: 0, description: 'A refreshing herbal remedy.', craftable: true, materialCost: 4, cooldown: 36 },
+  { id: 'herb_pouch', name: 'Herb Tincture', icon: '🌿', basePrice: 8, category: 'potion', tier: 0, description: 'A refreshing herbal remedy.', craftable: true, materialCost: 4, cooldown: 36 },
   { id: 'rat_jerky', name: 'Rat Jerky', icon: '🍖', basePrice: 5, category: 'food', tier: 0, description: 'Chewy but filling. Goblin favorite.', craftable: false, materialCost: 3, cooldown: 24 },
   { id: 'rusty_ring', name: 'Rusty Ring', icon: '💍', basePrice: 10, category: 'trinket', tier: 0, description: 'Might be worth something... or not.', craftable: false, materialCost: 5, cooldown: 24 },
 

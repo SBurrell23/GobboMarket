@@ -3,6 +3,8 @@ export interface MinigameResult {
   quality: number;
   multiplier: number;
   completed: boolean;
+  /** Haggle minigame only: win, settle, or bust */
+  haggleOutcome?: 'win' | 'settle' | 'bust';
 }
 
 export interface Minigame {

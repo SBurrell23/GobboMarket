@@ -6,7 +6,7 @@ import './styles/animations.css';
 import { initSounds, soundManager } from './audio/initSounds.js';
 import { showSettingsModal } from './ui/components/SettingsModal.js';
 import { gameState } from './core/GameState.js';
-import { TIER_NAMES, CUSTOMER_TIER_UNLOCK } from './core/constants.js';
+import { TIER_NAMES, CUSTOMER_TIER_UNLOCK, CUSTOMER_ICONS } from './core/constants.js';
 import { eventBus } from './core/EventBus.js';
 import { saveSystem } from './core/SaveSystem.js';
 import { customerQueue } from './market/CustomerQueue.js';
@@ -17,6 +17,15 @@ import { MarketStall } from './ui/components/MarketStall.js';
 import { UpgradePanel } from './ui/components/UpgradePanel.js';
 import { WelcomeScreen } from './ui/components/WelcomeScreen.js';
 import { checkMilestones } from './progression/Milestones.js';
+
+function showRepToast(amount: number, race: string): void {
+  const icon = CUSTOMER_ICONS[race] ?? '❓';
+  const toast = document.createElement('div');
+  toast.className = 'rep-toast';
+  toast.textContent = `+${amount.toLocaleString()} ${icon}`;
+  (document.getElementById('toast-container') ?? document.body).appendChild(toast);
+  setTimeout(() => toast.remove(), 2450);
+}
 
 function boot(): void {
   initSounds();
@@ -31,6 +40,11 @@ function boot(): void {
 }
 
 function startGame(app: HTMLElement): void {
+  // Toast container: centers gold + rep toasts together at bottom
+  const toastContainer = document.createElement('div');
+  toastContainer.id = 'toast-container';
+  toastContainer.style.cssText = 'position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; gap: 12px; align-items: center; pointer-events: none; z-index: 250;';
+  document.body.appendChild(toastContainer);
 
   // Build header
   const header = document.createElement('header');
@@ -73,7 +87,7 @@ function startGame(app: HTMLElement): void {
 
   const screens: { name: ScreenName; label: string }[] = [
     { name: 'market', label: '🏪 Market' },
-    { name: 'upgrades', label: '⬆️ Upgrades' },
+    { name: 'upgrades', label: '⬆️ Upgrades & Recipes' },
     { name: 'progress', label: '📈 Progress' },
     { name: 'help', label: '❓ Help' },
   ];
@@ -142,6 +156,10 @@ function startGame(app: HTMLElement): void {
     showTierNotification(name);
   });
 
+  eventBus.on('reputation:changed', ({ amount, race }) => {
+    if (amount > 0) showRepToast(amount, race);
+  });
+
   // Check milestones periodically
   eventBus.on('coins:changed', () => checkMilestones());
 
@@ -200,14 +218,14 @@ const CATEGORY_PLURAL: Record<string, string> = {
 };
 
 const RACES_HELP: { icon: string; name: string; prefs: string[]; haggle: string; budget: string }[] = [
-  { icon: '👺', name: 'Goblin', prefs: ['weapon', 'food', 'trinket', 'potion'], haggle: 'High', budget: '0.8x' },
-  { icon: '🧑', name: 'Human', prefs: ['weapon', 'armor', 'food', 'potion'], haggle: 'Medium', budget: '1x' },
-  { icon: '🧝', name: 'Elf', prefs: ['potion', 'trinket', 'weapon'], haggle: 'Very high', budget: '1x' },
-  { icon: '⛏️', name: 'Dwarf', prefs: ['armor', 'weapon', 'food'], haggle: 'High', budget: '1x' },
-  { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Low', budget: '1x' },
+  { icon: '👺', name: 'Goblin', prefs: ['weapon', 'food', 'trinket', 'potion'], haggle: 'Tough', budget: '0.8x' },
+  { icon: '🧑', name: 'Human', prefs: ['weapon', 'armor', 'food', 'potion'], haggle: 'Poor', budget: '1x' },
+  { icon: '🧝', name: 'Elf', prefs: ['potion', 'trinket', 'weapon'], haggle: 'Tough', budget: '1.2x' },
+  { icon: '⛏️', name: 'Dwarf', prefs: ['armor', 'weapon', 'food'], haggle: 'Medium', budget: '1x' },
+  { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Poor', budget: '1x' },
   { icon: '🧒', name: 'Halfling', prefs: ['food', 'potion', 'trinket'], haggle: 'Medium', budget: '1x' },
   { icon: '👑', name: 'Noble', prefs: ['trinket', 'armor', 'potion'], haggle: 'Medium', budget: '1.5x' },
-  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'trinket', 'material'], haggle: 'Very high', budget: '1.3x' },
+  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'trinket', 'material'], haggle: 'Tough', budget: '1.3x' },
 ];
 
 function buildHelpContent(): string {
@@ -269,10 +287,10 @@ function buildHelpContent(): string {
             </thead>
             <tbody style="color: var(--ink-dim);">
               <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-shoddy);">Shoddy</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.6x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Poor minigame performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-passable);">Passable</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Mediocre performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-fine);">Fine</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Decent performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-superior);">Superior</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.3x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+4</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Great performance</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-masterwork);">Masterwork</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.8x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+8</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Amazing performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-passable);">Passable</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Mediocre performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-fine);">Fine</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.2x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+3</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Decent performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-superior);">Superior</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.5x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+5</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Great performance</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"><strong style="color: var(--quality-masterwork);">Masterwork</strong></td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.8x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+10</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Amazing performance</td></tr>
             </tbody>
           </table>
         </div>
@@ -295,19 +313,19 @@ function buildHelpContent(): string {
             </thead>
             <tbody style="color: var(--ink-dim);">
               <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Win</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.5x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+5</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Settle</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x–1.25x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">—</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Bust (roll 1)</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.65x–0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">—</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Settle</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">1.0x–1.25x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">+1</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Bust (roll 1)</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.65x–0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">-1</td></tr>
             </tbody>
           </table>
           <p style="color: var(--ink-dim); font-size: 0.88rem;">
-            Desired item +25% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Goblin 0.8x.
+            Desired item +25% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Elf 1.2x, Goblin 0.8x.
           </p>
         </div>
 
         <div class="panel help-card-span-4">
           <div class="panel-header"><h3>✨ Enchanting</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 12px;">
-            Click an inventory item marked with ✨ to enchant it. This starts the <strong style="color: var(--gold);">Sliding Puzzle minigame</strong> — rearrange a 3×3 grid of rune tiles to match the target pattern before time runs out. Enchanted items sell for significantly more. You can finish early for partial credit.
+            Click an inventory item marked with ✨ to enchant it. This starts the <strong style="color: var(--gold);">Sliding Puzzle minigame</strong> — rearrange a 3×3 grid of rune tiles to match the target pattern. Enchanted items sell for significantly more. You can finish early for partial credit.
           </p>
           <table style="border-collapse: collapse; width: 100%; font-size: 0.74rem; line-height: 1.2;">
             <thead>
@@ -336,19 +354,23 @@ function buildHelpContent(): string {
           <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">Ways to earn reputation:</p>
           <ul style="color: var(--ink-dim); font-size: 0.88rem; margin: 0 0 8px 0; display: flex; flex-direction: column; gap: 4px;">
             <li>Base 8 reputation per sale</li>
-            <li>+4 per quality rank above Fine (Superior +4, Masterwork +8)</li>
-            <li>+5 for winning the haggle</li>
+            <li>Fine +3, Superior +5, Masterwork +10</li>
+            <li>+5 for winning the haggle, +1 for settling, -1 for busting</li>
           </ul>
           <p style="color: var(--ink-dim); font-size: 0.88rem;">Reputation is tracked per race. Each market tier requires minimum reputation with specific races to unlock.</p>
         </div>
 
         <div class="panel help-card-span-2">
-          <div class="panel-header"><h3>🛒⚒️ Crafting Items & Buying Goods</h3></div>
-          <p style="color: var(--ink-dim); margin-bottom: 12px;">
-            <strong style="color: var(--gold);">Buying:</strong> On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (2-7 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
-          </p>
+          <div class="panel-header"><h3>📦 Buy Goods</h3></div>
           <p style="color: var(--ink-dim);">
-            <strong style="color: var(--gold);">Crafting:</strong> Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster!
+            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (1-6 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
+          </p>
+        </div>
+
+        <div class="panel help-card-span-2">
+          <div class="panel-header"><h3>⚒️ Crafting Items</h3></div>
+          <p style="color: var(--ink-dim);">
+            Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster! Higher tier items are harder to craft — the forge has a smaller sweet spot and a faster-moving bar.
           </p>
         </div>
 
@@ -360,13 +382,6 @@ function buildHelpContent(): string {
             <li>Both coins and reputation are needed to unlock higher market tiers</li>
             <li>Check the Upgrades tab for upgrades and recipes. Check the Progress tab for tier requirements and milestones</li>
           </ul>
-        </div>
-
-        <div class="panel help-card-span-2">
-          <div class="panel-header"><h3>🏆 Milestones</h3></div>
-          <p style="color: var(--ink-dim);">
-            As you play, you'll unlock milestones for crafting, selling, earning gold, and reaching new market tiers. Track your progress on the Progress tab. Reach the final milestone — <strong style="color: var(--gold);">Goblin Tycoon</strong> — to win the game!
-          </p>
         </div>
 
       <div class="panel help-card-span-8">

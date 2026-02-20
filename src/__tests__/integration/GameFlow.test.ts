@@ -55,7 +55,7 @@ describe('GameFlow Integration', () => {
       const removed = gameState.removeFromInventory(item.id);
       expect(removed).not.toBeNull();
       gameState.recordSale();
-      awardReputation(item.quality, false, 'human');
+      awardReputation(item.quality, 'settle', 'human');
 
       // 4. Verify coins increased
       expect(gameState.coins).toBeGreaterThan(initialCoins);

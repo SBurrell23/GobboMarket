@@ -27,6 +27,7 @@ export class SoundManager {
   private selectedTrackIndex = DEFAULT_SETTINGS.selectedTrackIndex;
   private musicTracks: string[] = [];
   private musicElement: HTMLAudioElement | null = null;
+  private loopElements: Map<string, HTMLAudioElement> = new Map();
   private baseUrl: string;
   private lastSliderPreviewAt = 0;
 
@@ -113,6 +114,35 @@ export class SoundManager {
       });
     } catch {
       // ignore
+    }
+  }
+
+  playLoop(soundId: SoundId, options?: { volume?: number }): void {
+    if (this.muted) return;
+    this.stopLoop(soundId);
+    const path = SOUND_PATHS[soundId];
+    if (!path) return;
+    const url = this.fullSfxBase + path;
+    try {
+      const audio = new Audio(url);
+      audio.loop = true;
+      const vol = options?.volume ?? 1;
+      audio.volume = Math.min(1, this.masterVolume * vol);
+      this.loopElements.set(soundId, audio);
+      audio.play().catch(() => {
+        this.loopElements.delete(soundId);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  stopLoop(soundId: SoundId): void {
+    const audio = this.loopElements.get(soundId);
+    if (audio) {
+      audio.pause();
+      audio.src = '';
+      this.loopElements.delete(soundId);
     }
   }
 

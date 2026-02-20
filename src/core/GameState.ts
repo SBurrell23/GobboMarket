@@ -31,6 +31,7 @@ export interface GameStateData {
   totalEarned: number;
   totalSpent: number;
   itemsCrafted: number;
+  craftsByQuality: Record<number, number>;
   itemsSold: number;
   haggleWins: number;
   haggleLosses: number;
@@ -50,6 +51,7 @@ function createDefaultState(): GameStateData {
     totalEarned: 0,
     totalSpent: 0,
     itemsCrafted: 0,
+    craftsByQuality: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
     itemsSold: 0,
     haggleWins: 0,
     haggleLosses: 0,
@@ -120,10 +122,14 @@ class GameState {
   }
 
   addRaceReputation(race: string, amount: number): void {
-    if (amount <= 0) return;
-    this.state.raceReputation[race] = (this.state.raceReputation[race] ?? 0) + amount;
-    eventBus.emit('reputation:changed', { amount, total: this.reputation, race });
-    this.checkTierUnlock();
+    const current = this.state.raceReputation[race] ?? 0;
+    const newVal = Math.max(0, current + amount);
+    this.state.raceReputation[race] = newVal;
+    const actualChange = newVal - current;
+    if (actualChange !== 0) {
+      eventBus.emit('reputation:changed', { amount: actualChange, total: this.reputation, race });
+      this.checkTierUnlock();
+    }
   }
 
   private checkTierUnlock(): void {
@@ -203,8 +209,15 @@ class GameState {
     eventBus.emit('stall:upgraded', { slots: this.state.stallSlots });
   }
 
-  recordCraft(): void {
+  recordCraft(quality?: number): void {
     this.state.itemsCrafted++;
+    this.recordAcquiredQuality(quality);
+  }
+
+  recordAcquiredQuality(quality?: number): void {
+    const q = Math.min(4, Math.max(0, quality ?? 0));
+    this.state.craftsByQuality ??= { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+    this.state.craftsByQuality[q] = (this.state.craftsByQuality[q] ?? 0) + 1;
   }
 
   recordSale(): void {
@@ -306,6 +319,7 @@ class GameState {
         ...base,
         ...parsed,
         upgradeRanks: parsed.upgradeRanks ?? base.upgradeRanks,
+        craftsByQuality: parsed.craftsByQuality ?? base.craftsByQuality,
       };
       return true;
     } catch {

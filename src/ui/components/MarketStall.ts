@@ -4,7 +4,7 @@ import { customerQueue } from '../../market/CustomerQueue.js';
 import type { Customer } from '../../market/Customer.js';
 import { getGoodsById, getCraftableGoods, getBuyableGoods, type GoodsDefinition } from '../../market/Goods.js';
 import { calculateBuyPrice, calculateSellPrice } from '../../market/PricingEngine.js';
-import { QUALITY_LABELS, REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUS } from '../../core/constants.js';
+import { QUALITY_LABELS, REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUSES } from '../../core/constants.js';
 import { ForgeGame } from '../../minigames/ForgeGame.js';
 import { HaggleGame } from '../../minigames/HaggleGame.js';
 import { ReactionTimeGame } from '../../minigames/ReactionTimeGame.js';
@@ -172,9 +172,11 @@ export class MarketStall {
       if (onCooldown) statusText = `<span style="color: var(--accent-bright)">On cooldown: ${this.formatCooldown(gameState.getCooldownRemaining(goods.id))}</span><br>`;
       else if (!canAfford) statusText = '<span style="color: var(--accent-bright)">Not enough gold!</span><br>';
       else if (!hasSpace) statusText = '<span style="color: var(--accent-bright)">Stall full!</span><br>';
+      const categoryLabel = goods.category.replace(/s$/, '').toUpperCase();
       showTooltip(card, `
         <strong style="color: var(--gold)">${goods.name}</strong> <span style="color: var(--ink-dim);">(Tier ${displayTier})</span><br>
         ${goods.description}<br>
+        <span style="color: var(--gold-dim); font-size: 0.85rem;">${categoryLabel}</span><br>
         ${cost} 🪙 | ${this.formatCooldown(effectiveCooldown)} 🕐<br>
         ${statusText}
       `);
@@ -186,12 +188,16 @@ export class MarketStall {
   }
 
   private renderSuppliers(): void {
+    const panels = this.supplierEl.querySelectorAll('.panel--supplier');
+    const craftScrollTop = panels[0]?.querySelector('.supplier-scroll')?.scrollTop ?? 0;
+    const buyScrollTop = panels[1]?.querySelector('.supplier-scroll')?.scrollTop ?? 0;
+
     this.supplierEl.innerHTML = '';
     this.cooldownGoodsIds.clear();
 
     // Craftable goods section
     const craftPanel = document.createElement('div');
-    craftPanel.className = 'panel';
+    craftPanel.className = 'panel panel--supplier';
     craftPanel.innerHTML = `<div class="panel-header"><h3>⚒️ Forge & Craft</h3></div>`;
     const craftGrid = document.createElement('div');
     craftGrid.className = `goods-grid goods-grid--supplier${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
@@ -200,13 +206,16 @@ export class MarketStall {
     for (const goods of craftable) {
       craftGrid.appendChild(this.buildSupplierCard(goods, 'Craft', () => this.startCrafting(goods)));
     }
-    craftPanel.appendChild(craftGrid);
+    const craftScroll = document.createElement('div');
+    craftScroll.className = 'supplier-scroll';
+    craftScroll.appendChild(craftGrid);
+    craftPanel.appendChild(craftScroll);
     this.supplierEl.appendChild(craftPanel);
 
     // Buyable goods section
     const buyPanel = document.createElement('div');
-    buyPanel.className = 'panel';
-    buyPanel.innerHTML = `<div class="panel-header"><h3>🏪 Buy Goods</h3></div>`;
+    buyPanel.className = 'panel panel--supplier';
+    buyPanel.innerHTML = `<div class="panel-header"><h3>📦 Buy Goods</h3></div>`;
     const buyGrid = document.createElement('div');
     buyGrid.className = `goods-grid goods-grid--supplier${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
 
@@ -214,8 +223,18 @@ export class MarketStall {
     for (const goods of buyable) {
       buyGrid.appendChild(this.buildSupplierCard(goods, 'Buy', () => this.buyGoods(goods)));
     }
-    buyPanel.appendChild(buyGrid);
+    const buyScroll = document.createElement('div');
+    buyScroll.className = 'supplier-scroll';
+    buyScroll.appendChild(buyGrid);
+    buyPanel.appendChild(buyScroll);
     this.supplierEl.appendChild(buyPanel);
+
+    requestAnimationFrame(() => {
+      this.supplierEl.querySelectorAll('.supplier-scroll').forEach((el, i) => {
+        const scrollTop = i === 0 ? craftScrollTop : buyScrollTop;
+        (el as HTMLElement).scrollTop = scrollTop;
+      });
+    });
   }
 
   private renderStall(): void {
@@ -275,16 +294,18 @@ export class MarketStall {
           `;
         }
 
-        const qualityRepBonus = item.quality >= 3 ? REPUTATION_QUALITY_BONUS * (item.quality - 2) : 0;
+        const qualityRepBonus = REPUTATION_QUALITY_BONUSES[item.quality] ?? 0;
         const repBonusTag = qualityRepBonus > 0
           ? ` <span style="color: var(--green-bright, #4ade80); font-size: 0.65rem;">(+${qualityRepBonus})</span>`
           : '';
+        const displayTier = goods.tier + 1;
 
         card.innerHTML = `
+          <div class="goods-card__tier-badge">T${displayTier}</div>
           <div class="goods-card__icon">${goods.icon}</div>
           <div class="goods-card__name">${goods.name}</div>
           <div class="goods-card__quality" style="color: ${['var(--quality-shoddy)', 'var(--quality-passable)', 'var(--quality-fine)', 'var(--quality-superior)', 'var(--quality-masterwork)'][Math.min(item.quality, 4)]}">${qualityLabel}${repBonusTag}</div>
-          ${item.enchanted ? '<div style="color: var(--enchanted-pink); font-size: 0.75rem;">✨ Enchanted x' + item.enchantMultiplier.toFixed(1) + '</div>' : ''}
+          ${item.enchanted ? '<div style="color: var(--enchanted-pink); font-size: 0.75rem;">✨ Enchanted x' + item.enchantMultiplier.toFixed(1) + ' ✨</div>' : ''}
           ${priceHtml}
         `;
 
@@ -302,8 +323,8 @@ export class MarketStall {
           if (!item.enchanted) {
             const enchantBtn = document.createElement('button');
             enchantBtn.className = 'btn btn-subtle';
-            enchantBtn.style.cssText = 'font-size: 0.75rem; padding: 2px 8px; margin-top: 4px;';
-            enchantBtn.textContent = '✨ Enchant';
+            enchantBtn.style.cssText = 'font-size: 0.75rem; padding: 2px 8px; margin-top: 4px; font-family: var(--font-body);';
+            enchantBtn.textContent = '✨ Enchant ✨';
             enchantBtn.addEventListener('click', (e) => {
               e.stopPropagation();
               this.startEnchanting(item);
@@ -313,12 +334,14 @@ export class MarketStall {
         }
 
         card.addEventListener('mouseenter', () => {
+          const categoryLabel = goods.category.replace(/s$/, '').toUpperCase();
           const prefTip = isDesired ? '<span style="color: var(--green-bright, #4ade80);">★ Desired item!</span><br>'
             : isRefused ? '<span style="color: var(--accent-bright);">✕ Refused — pays much less</span><br>'
             : '';
+          const enchantLine = item.enchanted ? `<span style="color: var(--enchanted-pink)">Enchanted: x${item.enchantMultiplier.toFixed(1)} ✨</span><br>` : '';
           const tooltipText = cust
-            ? `<strong style="color: var(--gold)">${goods.name}</strong><br>Quality: ${qualityLabel}<br>${item.enchanted ? `<span style="color: var(--enchanted-pink)">Enchanted: x${item.enchantMultiplier.toFixed(1)}</span><br>` : ''}${prefTip}Click to sell to ${cust.name}`
-            : `<strong style="color: var(--gold)">${goods.name}</strong><br>Quality: ${qualityLabel}<br>${item.enchanted ? `<span style="color: var(--enchanted-pink)">Enchanted: x${item.enchantMultiplier.toFixed(1)}</span><br>` : ''}Select a customer to sell this item.`;
+            ? `<strong style="color: var(--gold)">${goods.name}</strong><br><span style="color: var(--gold-dim); font-size: 0.85rem;">${categoryLabel}</span><br>${enchantLine}${prefTip}Click to sell to ${cust.name}`
+            : `<strong style="color: var(--gold)">${goods.name}</strong><br><span style="color: var(--gold-dim); font-size: 0.85rem;">${categoryLabel}</span><br>${enchantLine}Select a customer to sell this item.`;
           showTooltip(card, tooltipText);
         });
         card.addEventListener('mouseleave', hideTooltip);
@@ -409,11 +432,11 @@ export class MarketStall {
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Sell to ${customer.name} the ${customer.type}, wants ${customer.desiredCategory}`);
 
-    const haggleLabel = customer.haggleSkill < 0.33 ? 'Poor Haggler'
-      : customer.haggleSkill < 0.66 ? 'Moderate Haggler'
+    const haggleLabel = customer.haggleTier === 'poor' ? 'Poor Haggler'
+      : customer.haggleTier === 'medium' ? 'Medium Haggler'
       : 'Tough Haggler';
-    const haggleColor = customer.haggleSkill < 0.33 ? 'var(--green-bright, #4ade80)'
-      : customer.haggleSkill < 0.66 ? 'var(--gold-dim)'
+    const haggleColor = customer.haggleTier === 'poor' ? 'var(--green-bright, #4ade80)'
+      : customer.haggleTier === 'medium' ? 'var(--gold-dim)'
       : 'var(--accent-bright)';
 
     const budgetLabel = customer.budgetMultiplier >= 1.5 ? 'Deep Pockets'
@@ -433,8 +456,8 @@ export class MarketStall {
       <div class="customer-card__icon">${customer.icon}</div>
       <div class="customer-card__info">
         <div class="customer-card__name">${customer.name} <span style="color: var(--ink-dim);">the</span> <span style="color: var(--ink); font-size: 0.85rem;">${raceName}</span> <span style="color: var(--green-bright, #4ade80); font-size: 0.72rem;">(+${baseRep})</span></div>
-        <div class="customer-card__desire">Wants: <span style="color: var(--gold); font-family: var(--font-display); letter-spacing: 0.5px;">${wantsPlural}</span></div>
-        <div style="font-size: 0.75rem; display: flex; gap: 8px;">
+        <div style="font-size: 0.75rem; display: flex; gap: 8px; flex-wrap: wrap;">
+          <span style="color: var(--ink-dim);">Wants: <span style="color: var(--gold); font-family: var(--font-body); letter-spacing: 0.5px;">${wantsPlural}</span></span>
           <span style="color: ${haggleColor};">🎲 ${haggleLabel}</span>
           <span style="color: ${budgetColor};">💰 ${budgetLabel}</span>
         </div>
@@ -442,7 +465,6 @@ export class MarketStall {
           <div class="patience-bar__fill" style="height: 100%; background: var(--gold-dim); border-radius: 2px; transition: width 1s linear; width: 100%;"></div>
         </div>
       </div>
-      <div style="color: var(--gold-dim); font-size: 0.8rem; align-self: center;">Select</div>
     `;
 
     card.style.cursor = 'pointer';
@@ -483,7 +505,7 @@ export class MarketStall {
 
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">⚒️ Forging: ${goods.name}</h2><div id="forge-area"></div>`;
 
-    const forge = new ForgeGame(gameState.currentTier);
+    const forge = new ForgeGame(goods.tier);
     forge.onComplete = (result) => {
       forge.destroy();
       eventBus.emit('minigame:completed', { type: 'forge', score: result.score });
@@ -498,7 +520,7 @@ export class MarketStall {
       };
 
       gameState.addToInventory(item);
-      gameState.recordCraft();
+      gameState.recordCraft(result.quality);
       gameState.startCooldown(goods.id, goods.cooldown);
 
       this.hideOverlay();
@@ -517,7 +539,7 @@ export class MarketStall {
     eventBus.emit('minigame:started', { type: 'appraisal' });
     this.showOverlay();
 
-    this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">🪙 Buy at the Right Moment: ${goods.name}</h2><div id="appraisal-area"></div>`;
+    this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">📦 Buying ${goods.name}</h2><div id="appraisal-area"></div>`;
 
     const reactionGame = new ReactionTimeGame();
     reactionGame.onComplete = (result) => {
@@ -534,6 +556,7 @@ export class MarketStall {
       };
 
       gameState.addToInventory(item);
+      gameState.recordAcquiredQuality(result.quality);
       gameState.startCooldown(goods.id, goods.cooldown);
       eventBus.emit('item:bought', { itemId: goods.id, price: cost });
       this.hideOverlay();
@@ -591,13 +614,12 @@ export class MarketStall {
       eventBus.emit('minigame:completed', { type: 'haggle', score: result.score });
 
       const priceCalc = calculateSellPrice(item, customer, result.multiplier);
-      const won = result.multiplier >= 1.0;
+      const won = result.haggleOutcome === 'win';
 
       gameState.removeFromInventory(item.id);
       gameState.addCoins(priceCalc.finalPrice, `sale:${item.goodsId}`);
       gameState.recordSale();
       gameState.recordHaggle(won);
-      awardReputation(item.quality, won, customer.type);
 
       this.selectedCustomer = null;
       customerQueue.removeCustomer(customer.id);
@@ -607,6 +629,7 @@ export class MarketStall {
       this.hideOverlay();
       this.render();
       this.showSaleToast(priceCalc.finalPrice);
+      awardReputation(item.quality, result.haggleOutcome ?? 'settle', customer.type);
       this.showNewMilestones();
     };
 
@@ -672,8 +695,8 @@ export class MarketStall {
     const toast = document.createElement('div');
     toast.className = 'sale-toast';
     toast.textContent = `+${amount.toLocaleString()} 🪙`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2750);
+    (document.getElementById('toast-container') ?? document.body).appendChild(toast);
+    setTimeout(() => toast.remove(), 2450);
   }
 
   private showOverlay(): void {

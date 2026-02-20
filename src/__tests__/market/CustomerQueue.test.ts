@@ -14,7 +14,7 @@ describe('Customer', () => {
     expect(c.icon).toBe('👺');
     expect(c.name).toBeTruthy();
     expect(c.patience).toBeGreaterThan(0);
-    expect(c.haggleSkill).toBeGreaterThan(0);
+    expect(['poor', 'medium', 'tough']).toContain(c.haggleTier);
   });
 
   it('should increment customer IDs', () => {

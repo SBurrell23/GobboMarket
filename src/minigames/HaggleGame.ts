@@ -28,11 +28,10 @@ export class HaggleGame implements Minigame {
   }
 
   private rollCustomerDie(): void {
-    // Higher haggle skill = higher minimum roll
-    const minRoll = Math.ceil(this.customer.haggleSkill * 8);
-    this.customerRoll = minRoll + Math.floor(Math.random() * (20 - minRoll)) + 1;
-    this.customerRoll = Math.min(20, Math.max(1, this.customerRoll));
-
+    const [min, max] = this.customer.haggleTier === 'poor' ? [3, 9]
+      : this.customer.haggleTier === 'medium' ? [9, 15]
+      : [15, 20];
+    this.customerRoll = min + Math.floor(Math.random() * (max - min + 1));
     this.customerRoll = Math.max(1, this.customerRoll - gameState.getUpgradeRank('hagglers_dice'));
 
     this.phase = 'player-turn';
@@ -198,7 +197,7 @@ export class HaggleGame implements Minigame {
       </p>
 
       <p style="color: var(--green-bright, #4ade80); font-size: 0.9rem; margin-bottom: 20px;">
-        ⭐+${calculateReputationGain(this.itemQuality, this.outcome === 'win')} ${this.customer.type.charAt(0).toUpperCase() + this.customer.type.slice(1)} Reputation
+        ⭐${calculateReputationGain(this.itemQuality, this.outcome!) >= 0 ? '+' : ''}${calculateReputationGain(this.itemQuality, this.outcome!)} ${this.customer.type.charAt(0).toUpperCase() + this.customer.type.slice(1)} Reputation
       </p>
 
       <button class="btn btn-gold done-btn">Accept Deal</button>
@@ -213,6 +212,7 @@ export class HaggleGame implements Minigame {
         quality: 0,
         multiplier,
         completed: true,
+        haggleOutcome: this.outcome ?? undefined,
       };
       if (this.onComplete) this.onComplete(result);
     });

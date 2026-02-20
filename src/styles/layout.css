@@ -108,6 +108,7 @@
 .game-nav__btn {
   font-family: var(--font-display);
   padding: var(--spacing-xs) var(--spacing-md);
+  min-width: 150px;
   color: var(--ink-dim);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
@@ -146,6 +147,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  padding-right: 3px;
 }
 .market-layout__sidebar:last-child {
   overflow: hidden;
@@ -155,11 +157,38 @@
   min-height: 0;
 }
 
+.market-layout__sidebar:first-child {
+  overflow: hidden;
+}
+
+/* Supplier panels (Forge & Craft, Buy Goods): header fixed, only grid scrolls */
+.panel--supplier {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.panel--supplier .panel-header {
+  flex-shrink: 0;
+}
+.supplier-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  direction: rtl;
+  padding-left: 3px;
+}
+.supplier-scroll .goods-grid {
+  direction: ltr;
+}
+
 .customer-queue {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   overflow: visible;
+  padding: 4px 0;
 }
 
 .customer-card {

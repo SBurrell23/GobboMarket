@@ -28,6 +28,8 @@ export const SOUND_IDS = [
   'reaction_good',
   'reaction_passable',
   'reaction_shoddy',
+  'reaction_clock_tick',
+  'reaction_buy',
   'settings_open',
 ] as const;
 
@@ -40,9 +42,9 @@ export const SOUND_PATHS: Record<SoundId, string> = {
   forge_strike: 'Rattle/Metal/SFX_Rattle_Metal_1.wav',
   craft_complete: 'Powerup/SFX_Powerup_Bright_1.wav',
   gold_earned: 'Collect/Coin/SFX_Player_Collect_Coin_2.wav',
-  good_bought: 'Cash_Register/SFX_Cash_Register_Buy_Click_1.wav',
+  good_bought: 'Powerup/SFX_Powerup_Bright_1.wav',
   enchant_open: 'UI/Click/Open_Close/SFX_UI_Button_Click_Open_1.wav',
-  enchant_complete: 'Powerup/SFX_Powerup_Crystal_1.wav',
+  enchant_complete: 'Collect/Bright/SFX_Player_Collect_Bright_2.wav',
   enchant_tile_move: 'UI/Click/Generic/SFX_UI_Button_Click_Generic_1.wav',
   enchant_finish_early: 'UI/Click/Select/SFX_UI_Button_Click_Select_1.wav',
   haggle_open: 'UI/Click/Open_Close/SFX_UI_Button_Click_Open_1.wav',
@@ -62,5 +64,7 @@ export const SOUND_PATHS: Record<SoundId, string> = {
   reaction_good: 'UI/Click/Select/SFX_UI_Button_Click_Select_1.wav',
   reaction_passable: 'UI/Click/Generic/SFX_UI_Button_Click_Generic_1.wav',
   reaction_shoddy: 'UI/Click/Negative/SFX_UI_Button_Click_Generic_Negative_1.wav',
+  reaction_clock_tick: '../freesound_community-clock-tick-101150.mp3',
+  reaction_buy: 'Pop/Mouth/SFX_Pop_Mouth_High_1.wav',
   settings_open: 'UI/Click/Settings/SFX_UI_Button_Click_Settings_1.wav',
 };

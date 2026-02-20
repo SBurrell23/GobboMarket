@@ -1,6 +1,6 @@
 import { gameState } from './GameState.js';
 import { eventBus } from './EventBus.js';
-import { SAVE_KEY, SAVE_VERSION } from './constants.js';
+import { SAVE_KEY, SAVE_VERSION, TIER_NAMES } from './constants.js';
 
 interface SaveEnvelope {
   version: number;
@@ -67,6 +67,53 @@ export class SaveSystem {
 
   hasSave(): boolean {
     return localStorage.getItem(SAVE_KEY) !== null;
+  }
+
+  getSaveTier(): number | null {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      const envelope = JSON.parse(raw) as SaveEnvelope;
+      if (!envelope?.data) return null;
+      const parsed = JSON.parse(envelope.data) as { currentTier?: number };
+      return typeof parsed.currentTier === 'number' ? parsed.currentTier : null;
+    } catch {
+      return null;
+    }
+  }
+
+  getSaveMetadata(): {
+    coins: number;
+    currentTier: number;
+    tierName: string;
+    timestamp: number;
+    itemsSold: number;
+    inventoryCount: number;
+  } | null {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      const envelope = JSON.parse(raw) as SaveEnvelope;
+      if (!envelope?.data) return null;
+      const parsed = JSON.parse(envelope.data) as {
+        coins?: number;
+        currentTier?: number;
+        itemsSold?: number;
+        inventory?: unknown[];
+      };
+      if (typeof parsed.coins !== 'number') return null;
+      const tier = typeof parsed.currentTier === 'number' ? parsed.currentTier : 0;
+      return {
+        coins: parsed.coins,
+        currentTier: tier,
+        tierName: TIER_NAMES[tier] ?? 'Unknown',
+        timestamp: envelope.timestamp ?? 0,
+        itemsSold: typeof parsed.itemsSold === 'number' ? parsed.itemsSold : 0,
+        inventoryCount: Array.isArray(parsed.inventory) ? parsed.inventory.length : 0,
+      };
+    } catch {
+      return null;
+    }
   }
 
   deleteSave(): void {

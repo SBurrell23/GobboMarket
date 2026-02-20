@@ -54,18 +54,9 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   },
   // Tier 1 (Back Alley Bazaar)
   {
-    id: 'thick_gloves',
-    name: 'Thick Gloves',
-    description: '+0.05 forge sweet spot width',
-    tier: 1,
-    maxRank: 5,
-    icon: '🧤',
-    costForRank: (rank) => tierScaledCost(1, rank),
-  },
-  {
     id: 'hagglers_dice',
     name: "Haggler's Dice",
-    description: 'Customer d20 -1',
+    description: '-1 to customer roll per rank',
     tier: 1,
     maxRank: 5,
     icon: '🎲',
@@ -84,7 +75,7 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'rune_library',
     name: 'Rune Library',
-    description: '6 fewer shuffles',
+    description: '5 fewer shuffles',
     tier: 2,
     maxRank: 4,
     icon: '📚',
@@ -100,15 +91,6 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
     icon: '🤲',
     costForRank: (rank) => tierScaledCost(3, rank),
   },
-  {
-    id: 'keen_eye',
-    name: 'Keen Eye',
-    description: '+4 seconds on timed minigames',
-    tier: 3,
-    maxRank: 5,
-    icon: '👁️',
-    costForRank: (rank) => tierScaledCost(3, rank),
-  },
   // Tier 4 (Merchant Quarter)
   {
     id: 'auctioneers_reflex',
@@ -117,15 +99,6 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
     tier: 4,
     maxRank: 4,
     icon: '⚡',
-    costForRank: (rank) => tierScaledCost(4, rank),
-  },
-  {
-    id: 'bargain_specialist',
-    name: 'Bargain Specialist',
-    description: '+15% sell on T1-3 items',
-    tier: 4,
-    maxRank: 3,
-    icon: '🏷️',
     costForRank: (rank) => tierScaledCost(4, rank),
   },
   // Tier 5 (Guild District)

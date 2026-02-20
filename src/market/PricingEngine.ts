@@ -30,17 +30,12 @@ export function calculateSellPrice(
     : 1.0;
   const budgetMult = customer.budgetMultiplier;
 
-  const itemTier = goods?.tier ?? 0;
   const workbenchBonus = goods?.craftable
     ? 1 + gameState.getUpgradeRank('sturdy_workbench') * 0.05
     : 1.0;
-  const lowTierBonus =
-    itemTier >= 1 && itemTier <= 3
-      ? 1 + gameState.getUpgradeRank('bargain_specialist') * 0.15
-      : 1.0;
 
   const finalPrice = Math.round(
-    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus * lowTierBonus
+    basePrice * qualityMult * enchantMult * categoryBonus * budgetMult * haggleMultiplier * workbenchBonus
   );
 
   return {

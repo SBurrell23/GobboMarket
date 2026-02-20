@@ -1,12 +1,14 @@
 import { soundManager } from '../../audio/SoundManager.js';
+import { restoreScrollPositions, saveScrollPositions } from '../scrollPreserve.js';
 
 export function showSettingsModal(): void {
+  const scrollState = saveScrollPositions();
   const backdrop = document.createElement('div');
   backdrop.style.cssText = `
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.6);
-    z-index: 300;
+    z-index: 600;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,6 +154,7 @@ export function showSettingsModal(): void {
 
   function close(): void {
     backdrop.remove();
+    restoreScrollPositions(scrollState);
   }
 
   backdrop.addEventListener('click', (e) => {

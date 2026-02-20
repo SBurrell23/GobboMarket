@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { calculateReputationGain, getReputationLevel } from '../../progression/Reputation.js';
 import { gameState } from '../../core/GameState.js';
 import { eventBus } from '../../core/EventBus.js';
-import { REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUS, REPUTATION_HAGGLE_WIN_BONUS } from '../../core/constants.js';
+import { REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUSES, REPUTATION_HAGGLE_WIN_BONUS, REPUTATION_HAGGLE_SETTLE_BONUS, REPUTATION_HAGGLE_BUST_PENALTY } from '../../core/constants.js';
 
 describe('Reputation', () => {
   beforeEach(() => {
@@ -10,26 +10,36 @@ describe('Reputation', () => {
     eventBus.clear();
   });
 
-  it('should give base reputation for a sale', () => {
-    const rep = calculateReputationGain(2, false);
-    expect(rep).toBe(REPUTATION_PER_SALE_BASE);
+  it('should give base reputation for a sale with bust', () => {
+    const rep = calculateReputationGain(1, 'bust'); // Passable = no quality bonus
+    expect(rep).toBe(REPUTATION_PER_SALE_BASE - REPUTATION_HAGGLE_BUST_PENALTY);
+  });
+
+  it('should give base + settle bonus for settling', () => {
+    const rep = calculateReputationGain(1, 'settle'); // Passable = no quality bonus
+    expect(rep).toBe(REPUTATION_PER_SALE_BASE + REPUTATION_HAGGLE_SETTLE_BONUS);
   });
 
   it('should give bonus for high quality items', () => {
-    const normalRep = calculateReputationGain(2, false);
-    const highQualityRep = calculateReputationGain(4, false);
+    const normalRep = calculateReputationGain(1, 'settle');
+    const highQualityRep = calculateReputationGain(4, 'settle');
     expect(highQualityRep).toBeGreaterThan(normalRep);
   });
 
   it('should give bonus for winning haggle', () => {
-    const noHaggle = calculateReputationGain(2, false);
-    const withHaggle = calculateReputationGain(2, true);
-    expect(withHaggle).toBe(noHaggle + REPUTATION_HAGGLE_WIN_BONUS);
+    const settleRep = calculateReputationGain(1, 'settle');
+    const winRep = calculateReputationGain(1, 'win');
+    expect(winRep).toBe(settleRep - REPUTATION_HAGGLE_SETTLE_BONUS + REPUTATION_HAGGLE_WIN_BONUS);
   });
 
   it('should calculate quality bonus correctly', () => {
-    const rep = calculateReputationGain(4, false);
-    expect(rep).toBe(REPUTATION_PER_SALE_BASE + REPUTATION_QUALITY_BONUS * 2);
+    const rep = calculateReputationGain(4, 'settle');
+    expect(rep).toBe(REPUTATION_PER_SALE_BASE + REPUTATION_QUALITY_BONUSES[4] + REPUTATION_HAGGLE_SETTLE_BONUS);
+  });
+
+  it('should apply bust penalty', () => {
+    const rep = calculateReputationGain(1, 'bust'); // Passable = no quality bonus
+    expect(rep).toBe(REPUTATION_PER_SALE_BASE - REPUTATION_HAGGLE_BUST_PENALTY);
   });
 
   it('should return correct reputation level', () => {

@@ -3,6 +3,8 @@ import {
   CUSTOMER_ICONS,
   CUSTOMER_PATIENCE,
   CUSTOMER_TIER_UNLOCK,
+  CUSTOMER_HAGGLE_TIER,
+  type HaggleTier,
 } from '../core/constants.js';
 import type { GoodsDefinition } from './Goods.js';
 import {
@@ -18,7 +20,7 @@ export interface Customer {
   desiredCategory: GoodsDefinition['category'];
   refusedCategory: GoodsDefinition['category'];
   patience: number;
-  haggleSkill: number;
+  haggleTier: HaggleTier;
   budgetMultiplier: number;
   arrivedAt: number;
 }
@@ -56,16 +58,7 @@ const ALL_CATEGORIES: GoodsDefinition['category'][] = ['weapon', 'armor', 'potio
 export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
   const names = NAME_POOLS[type] ?? HUMAN_NAMES;
   const prefs = CATEGORY_PREFERENCES[type] ?? ['weapon'];
-  const roll = Math.random();
-  let haggleSkill: number;
-  if (roll < 0.25) {
-    haggleSkill = 0.05 + Math.random() * 0.28;
-  } else if (roll < 0.75) {
-    haggleSkill = 0.33 + Math.random() * 0.33;
-  } else {
-    haggleSkill = 0.66 + Math.random() * 0.29;
-  }
-  haggleSkill = Math.round(haggleSkill * 100) / 100;
+  const haggleTier = CUSTOMER_HAGGLE_TIER[type] ?? 'medium';
   const desired = pickRandom(prefs);
   const refusePool = ALL_CATEGORIES.filter(c => c !== desired);
   const refused = pickRandom(refusePool);
@@ -77,8 +70,8 @@ export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
     desiredCategory: desired,
     refusedCategory: refused,
     patience: CUSTOMER_PATIENCE[type] ?? 5,
-    haggleSkill,
-    budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'goblin' ? 0.8 : 1.0,
+    haggleTier,
+    budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'elf' ? 1.2 : type === 'goblin' ? 0.8 : 1.0,
     arrivedAt: Date.now(),
   };
 }

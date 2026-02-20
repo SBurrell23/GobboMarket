@@ -11,7 +11,7 @@ function makeCustomer(): Customer {
     desiredCategory: 'weapon',
     refusedCategory: 'food',
     patience: 5,
-    haggleSkill: 0.5,
+    haggleTier: 'medium',
     budgetMultiplier: 1.0,
     arrivedAt: Date.now(),
   };

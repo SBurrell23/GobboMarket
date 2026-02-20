@@ -19,8 +19,8 @@
   --purple-bright: #a87ab8;
   --orange: #c48a3a;
   --orange-bright: #e0a050;
-  --pink-soft: #fff8ff;
-  --pink-soft-bright: #eac0f9;
+  --pink-soft: #e5e5e5;
+  --pink-soft-bright: #d3cbd6;
   /* Quality colors */
   --quality-shoddy: var(--ink-dim);
   --quality-passable: var(--green-bright);
@@ -32,7 +32,9 @@
   --shadow-light: rgba(0, 0, 0, 0.3);
 
   --font-display: 'MedievalSharp', cursive;
-  --font-body: 'Crimson Text', Georgia, serif;
+  /* Body font: change the line below to try different options (fonts above are preloaded) */
+  /* Source Sans 3 | Open Sans | Lato | Nunito | 'Crimson Text', Georgia, serif */
+  --font-body: 'Source Sans 3', sans-serif;
 
   --radius-sm: 4px;
   --radius-md: 8px;

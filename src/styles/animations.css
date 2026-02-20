@@ -77,17 +77,13 @@
 
 /* Sale notification toast */
 @keyframes toastIn {
-  0% { opacity: 0; transform: translate(-50%, 20px); }
-  15% { opacity: 1; transform: translate(-50%, 0); }
-  85% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, -10px); }
+  0% { opacity: 0; transform: translateY(20px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
 }
 
 .sale-toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
   background: var(--bg-dark);
   border: 1px solid var(--gold-dim);
   border-radius: var(--radius-md);
@@ -97,8 +93,31 @@
   font-size: 1.65rem;
   z-index: 250;
   pointer-events: none;
-  animation: toastIn 2.75s ease forwards;
+  animation: toastIn 2.45s ease forwards;
+  flex-shrink: 0;
   box-shadow: 0 4px 16px var(--shadow);
+}
+
+/* Reputation notification toast (right side) */
+@keyframes toastInRight {
+  0% { opacity: 0; transform: translate(0, 20px); }
+  15% { opacity: 1; transform: translate(0, 0); }
+  85% { opacity: 1; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(0, -10px); }
+}
+
+.rep-toast {
+  background: var(--bg-dark);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-md);
+  padding: 15px 36px;
+  color: var(--green-bright);
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  pointer-events: none;
+  animation: toastInRight 2.45s ease forwards;
+  box-shadow: 0 4px 16px var(--shadow);
+  flex-shrink: 0;
 }
 
 /* Glow pulse for enchanted items (soft pink) */
@@ -114,9 +133,10 @@
 }
 
 .customer-card--selected {
-  border-color: var(--gold) !important;
-  box-shadow: 0 0 12px rgba(212, 168, 67, 0.4);
-  background: var(--parchment-light);
+  border: 1px solid var(--gold) !important;
+  box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(212, 168, 67, 0.6), inset 0 0 0 1px rgba(212, 168, 67, 0.15);
+  background: #453520 !important;
+  transition: none !important;
 }
 
 @keyframes stallPulse {

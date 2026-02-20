@@ -1,9 +1,18 @@
 import type { Minigame, MinigameResult } from './MinigameBase.js';
-import { RUNECRAFT_TIME_SECONDS, RUNECRAFT_ENCHANT_MULTIPLIER } from '../core/constants.js';
+import { RUNECRAFT_ENCHANT_MULTIPLIER } from '../core/constants.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 
-const RUNE_SYMBOLS = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ'];
+const RUNE_SYMBOLS = ['ᚠ', 'ᚢ', 'ᛏ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ'];
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 export class RuneCraftGame implements Minigame {
   readonly type = 'runecraft';
@@ -15,33 +24,28 @@ export class RuneCraftGame implements Minigame {
   private targetTiles: (string | null)[] = [];
   private emptyIndex = 8;
   private moves = 0;
-  private timeLeft: number;
-  private timerInterval: ReturnType<typeof setInterval> | null = null;
   private finished = false;
 
   constructor(tier: number = 0) {
     this.tier = tier;
-    const bonus = gameState.getUpgradeRank('keen_eye') * 4;
-    this.timeLeft = RUNECRAFT_TIME_SECONDS + tier * 5 + bonus;
   }
 
   start(container: HTMLElement): void {
     this.container = container;
     this.generatePuzzle();
     this.render();
-    this.startTimer();
   }
 
   generatePuzzle(): void {
-    // Pick 8 runes for the solved state
-    const runes = [...RUNE_SYMBOLS];
+    // Pick 8 runes for the solved state (random order per enchant)
+    const runes = shuffleArray([...RUNE_SYMBOLS]);
     this.targetTiles = [...runes, null];
     this.tiles = [...this.targetTiles];
     this.emptyIndex = 8;
 
     // Shuffle by performing random valid slides (guarantees solvability)
-    const libraryReduction = gameState.getUpgradeRank('rune_library') * 6;
-    const shuffleMoves = Math.max(15, 30 + this.tier * 10 - libraryReduction);
+    const libraryReduction = gameState.getUpgradeRank('rune_library') * 5;
+    const shuffleMoves = Math.max(15, 15 + this.tier * 15 - libraryReduction);
     for (let i = 0; i < shuffleMoves; i++) {
       const neighbors = this.getNeighbors(this.emptyIndex);
       const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
@@ -73,26 +77,6 @@ export class RuneCraftGame implements Minigame {
     [this.tiles[a], this.tiles[b]] = [this.tiles[b], this.tiles[a]];
   }
 
-  private startTimer(): void {
-    this.timerInterval = setInterval(() => {
-      this.timeLeft--;
-      this.updateTimerDisplay();
-      if (this.timeLeft <= 0) {
-        this.finishGame(false);
-      }
-    }, 1000);
-  }
-
-  private updateTimerDisplay(): void {
-    const el = this.container?.querySelector('.runecraft-timer');
-    if (el) {
-      el.textContent = `⏳ ${this.timeLeft}s`;
-      if (this.timeLeft <= 5) {
-        (el as HTMLElement).style.color = 'var(--accent-bright)';
-      }
-    }
-  }
-
   private render(): void {
     if (!this.container) return;
     this.container.innerHTML = '';
@@ -103,16 +87,8 @@ export class RuneCraftGame implements Minigame {
     const matchCount = this.countMatches();
 
     wrapper.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <p style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem;">
-          Rune Sliding Puzzle
-        </p>
-        <span class="runecraft-timer" style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem;">
-          ⏳ ${this.timeLeft}s
-        </span>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 12px;">
-        Slide runes to match the target pattern. Moves: ${this.moves} | Correct: ${matchCount}/9
+      <p style="font-family: var(--font-display); color: var(--gold); font-size: 1.1rem; margin-bottom: 12px;">
+        Rune Sliding Puzzle
       </p>
 
       <div style="display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;">
@@ -178,7 +154,7 @@ export class RuneCraftGame implements Minigame {
 
     // Finish Early button
     const finishBtn = document.createElement('button');
-    finishBtn.className = 'btn btn-subtle';
+    finishBtn.className = 'btn btn-gold';
     finishBtn.style.cssText = 'display: block; margin: 16px auto 0; font-size: 0.9rem;';
     finishBtn.textContent = `Finish Early (${matchCount}/9 correct)`;
     finishBtn.addEventListener('click', () => {
@@ -236,12 +212,11 @@ export class RuneCraftGame implements Minigame {
   private finishGame(won: boolean): void {
     if (this.finished) return;
     this.finished = true;
-    if (this.timerInterval) clearInterval(this.timerInterval);
 
     if (!this.container) return;
 
     const matchRatio = this.countMatches() / 9;
-    let multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER + this.tier * 0.1 : 1 + matchRatio * (RUNECRAFT_ENCHANT_MULTIPLIER - 1);
+    let multiplier = won ? RUNECRAFT_ENCHANT_MULTIPLIER : 1 + matchRatio * (RUNECRAFT_ENCHANT_MULTIPLIER - 1);
     multiplier *= 1 + gameState.getUpgradeRank('enchanting_table') * 0.15;
 
     const result: MinigameResult = {
@@ -254,7 +229,6 @@ export class RuneCraftGame implements Minigame {
   }
 
   destroy(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
     if (this.container) this.container.innerHTML = '';
   }
 
@@ -264,7 +238,6 @@ export class RuneCraftGame implements Minigame {
       targetTiles: [...this.targetTiles],
       emptyIndex: this.emptyIndex,
       moves: this.moves,
-      timeLeft: this.timeLeft,
       finished: this.finished,
     };
   }

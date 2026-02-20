@@ -9,10 +9,10 @@ export function initSounds(): void {
 
   eventBus.on('screen:changed', ({ screen }) => { currentScreen = screen; });
   eventBus.on('customer:arrived', () => {
-    if (currentScreen === 'market') soundManager.play('customer_arrive');
+    if (currentScreen === 'market') soundManager.play('customer_arrive', { volume: 0.5 });
   });
   eventBus.on('customer:left', () => {
-    if (currentScreen === 'market') soundManager.play('customer_leave');
+    if (currentScreen === 'market') soundManager.play('customer_leave', { volume: 0.5 });
   });
   eventBus.on('coins:earned', () => soundManager.play('gold_earned'));
   eventBus.on('minigame:started', ({ type }) => {

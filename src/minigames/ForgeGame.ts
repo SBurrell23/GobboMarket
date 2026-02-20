@@ -28,8 +28,7 @@ export class ForgeGame implements Minigame {
 
   constructor(tier: number = 0) {
     this.tier = tier;
-    let baseWidth = FORGE_BASE_WINDOW - tier * FORGE_TIER_TIGHTENING;
-    baseWidth += gameState.getUpgradeRank('thick_gloves') * 0.05;
+    const baseWidth = FORGE_BASE_WINDOW - tier * FORGE_TIER_TIGHTENING;
     this.sweetSpotWidth = Math.max(0.08, baseWidth);
   }
 

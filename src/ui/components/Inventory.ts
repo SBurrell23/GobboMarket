@@ -59,7 +59,7 @@ export class Inventory {
       });
 
       card.addEventListener('mouseenter', () => {
-        const enchantText = item.enchanted ? `<br><span class="enchanted-pink">Enchanted (x${item.enchantMultiplier.toFixed(1)})</span>` : '';
+        const enchantText = item.enchanted ? `<br><span class="enchanted-pink">Enchanted (x${item.enchantMultiplier.toFixed(1)}) ✨</span>` : '';
         showTooltip(card, `
           <strong style="color: var(--gold)">${goods.name}</strong><br>
           Quality: ${qualityLabel}${enchantText}<br>

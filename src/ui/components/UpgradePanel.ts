@@ -6,7 +6,7 @@ import { getAvailableUpgrades, purchaseUpgrade } from '../../progression/Upgrade
 import { getAvailableRecipes, purchaseRecipe } from '../../progression/Recipes.js';
 import { getGoodsById } from '../../market/Goods.js';
 import { getCompletedMilestones, getAllMilestones } from '../../progression/Milestones.js';
-import { getReputationLevel } from '../../progression/Reputation.js';
+import { QUALITY_LABELS } from '../../core/constants.js';
 import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
 import { attachHoverSound } from '../../audio/attachHoverSound.js';
 import { soundManager } from '../../audio/SoundManager.js';
@@ -119,8 +119,12 @@ export class UpgradePanel {
           <span style="color: var(--gold); font-family: var(--font-display);">${tierInfo.name}</span>
         </div>
         <div>
-          <span style="color: var(--ink-dim);">Reputation:</span><br>
-          <span style="color: var(--gold); font-family: var(--font-display);">${getReputationLevel()} (${gameState.reputation})</span>
+          <span style="color: var(--ink-dim);">Items by quality:</span><br>
+          <span style="font-size: 0.85rem;">${[0, 1, 2, 3, 4].map((q) => {
+            const count = gameState.data.craftsByQuality?.[q] ?? 0;
+            const color = ['var(--quality-shoddy)', 'var(--quality-passable)', 'var(--quality-fine)', 'var(--quality-superior)', 'var(--quality-masterwork)'][q];
+            return `<span style="color: ${color}">${QUALITY_LABELS[q]}: ${count}</span>`;
+          }).join(' · ')}</span>
         </div>
         <div>
           <span style="color: var(--ink-dim);">Items Crafted:</span><br>
