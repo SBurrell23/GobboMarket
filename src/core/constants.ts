@@ -88,8 +88,8 @@ export const CUSTOMER_HAGGLE_TIER: Record<string, HaggleTier> = {
   dwarf: 'medium',
   orc: 'poor',
   halfling: 'medium',
-  noble: 'medium',
-  wizard: 'tough',
+  noble: 'tough',
+  wizard: 'medium',
 };
 
 export const CUSTOMER_TIER_UNLOCK: Record<string, number> = {
@@ -118,7 +118,7 @@ export const RUNECRAFT_ENCHANT_MULTIPLIER = 3.0;
 
 export const STALL_BASE_SLOTS = 5;
 export const STALL_SLOT_UPGRADE_COST_BASE = 100;
-export const STALL_SLOT_UPGRADE_COST_MULT = 2.5;
+export const STALL_SLOT_UPGRADE_COST_MULT = 2;
 
 export const REPUTATION_PER_SALE_BASE = 5;
 export const REPUTATION_DESIRED_BONUS = 3;

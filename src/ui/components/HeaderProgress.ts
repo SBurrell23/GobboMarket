@@ -31,9 +31,31 @@ export class HeaderProgress {
 
     const nextTier = gameState.currentTier + 1;
     if (nextTier >= TIER_NAMES.length) {
-      const maxEl = document.createElement('span');
-      maxEl.style.cssText = 'font-size: 0.85rem; color: var(--gold-dim);';
-      maxEl.textContent = 'Reach 1,000,000 Coins!';
+      const maxEl = document.createElement(gameState.hasMaxCoins ? 'button' : 'span');
+      maxEl.style.cssText = 'font-size: 0.85rem; color: var(--gold-dim); background: none; border: none; cursor: default; font-family: inherit;';
+      maxEl.textContent = gameState.hasMaxCoins ? 'You are a Goblin Tycoon!' : 'Reach 1,000,000 Coins!';
+      if (gameState.hasMaxCoins) {
+        const btn = maxEl as HTMLButtonElement;
+        btn.style.cursor = 'pointer';
+        btn.style.color = 'var(--gold)';
+        btn.style.background = 'var(--parchment)';
+        btn.style.border = '1px solid var(--gold)';
+        btn.style.borderRadius = '4px';
+        btn.style.padding = '4px 10px';
+        btn.style.transition = 'all 0.15s ease';
+        btn.addEventListener('mouseenter', () => {
+          btn.style.background = 'var(--parchment-light)';
+          btn.style.borderColor = 'var(--gold-bright)';
+          btn.style.color = 'var(--gold-bright)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.background = 'var(--parchment)';
+          btn.style.borderColor = 'var(--gold)';
+          btn.style.color = 'var(--gold)';
+        });
+        maxEl.addEventListener('click', () => eventBus.emit('victory:show', {}));
+        attachHoverSound(maxEl);
+      }
       this.container.appendChild(maxEl);
       return;
     }

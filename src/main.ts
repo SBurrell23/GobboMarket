@@ -235,10 +235,10 @@ const RACES_HELP: { icon: string; name: string; prefs: string[]; haggle: string;
   { icon: '🧑', name: 'Human', prefs: ['weapon', 'armor', 'food', 'potion'], haggle: 'Poor', budget: '1x' },
   { icon: '🧝', name: 'Elf', prefs: ['potion', 'trinket', 'weapon'], haggle: 'Tough', budget: '1.2x' },
   { icon: '⛏️', name: 'Dwarf', prefs: ['armor', 'weapon', 'food'], haggle: 'Medium', budget: '1x' },
-  { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Poor', budget: '1x' },
+  { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Poor', budget: '0.9x' },
   { icon: '🧒', name: 'Halfling', prefs: ['food', 'potion', 'trinket'], haggle: 'Medium', budget: '1x' },
-  { icon: '👑', name: 'Noble', prefs: ['trinket', 'armor', 'potion'], haggle: 'Medium', budget: '1.5x' },
-  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'weapon', 'food'], haggle: 'Tough', budget: '1.3x' },
+  { icon: '👑', name: 'Noble', prefs: ['trinket', 'armor', 'potion'], haggle: 'Tough', budget: '1.5x' },
+  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'weapon', 'food'], haggle: 'Medium', budget: '1.3x' },
 ];
 
 function buildHelpContent(): string {
@@ -249,7 +249,7 @@ function buildHelpContent(): string {
     const tierName = TIER_NAMES[tierIdx] ?? 'Unknown';
     const prefsStr = r.prefs.map(c => CATEGORY_PLURAL[c] ?? c.toUpperCase()).join(', ');
     const cell = 'style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"';
-    return `<tr><td ${cell}>${icon} ${r.name}</td><td ${cell}>${prefsStr}</td><td ${cell}>${tierName}</td><td ${cell}>${r.haggle}</td><td ${cell}>${r.budget}</td></tr>`;
+    return `<tr><td ${cell}>${icon} ${r.name}</td><td ${cell}>${prefsStr}</td><td ${cell}>${tierName} +</td><td ${cell}>${r.haggle}</td><td ${cell}>${r.budget}</td></tr>`;
   }).join('');
 
   return `
@@ -274,7 +274,7 @@ function buildHelpContent(): string {
               <tr>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Race</th>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Preferences</th>
-                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Market Tier</th>
+                <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Markets</th>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Haggle</th>
                 <th style="border: 1px solid var(--parchment-lighter); padding: 6px 8px; text-align: left; color: var(--gold);">Budget</th>
               </tr>
@@ -350,15 +350,15 @@ function buildHelpContent(): string {
             </thead>
             <tbody style="color: var(--ink-dim);">
               <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">0/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.0x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.2x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.4x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.7x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">4/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~1.9x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">5/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.1x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">6/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.3x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">7/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.6x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">8/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">~2.8x</td></tr>
-              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">9/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3.0x+</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.2x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.4x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.7x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">4/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">1.9x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">5/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2.1x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">6/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2.3x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">7/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2.6x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">8/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">2.8x</td></tr>
+              <tr><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">9/9</td><td style="border: 1px solid var(--parchment-lighter); padding: 2px 6px;">3.0x</td></tr>
             </tbody>
           </table>
         </div>

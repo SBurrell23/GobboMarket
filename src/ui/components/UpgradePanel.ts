@@ -1,7 +1,7 @@
 import { eventBus } from '../../core/EventBus.js';
 import { gameState } from '../../core/GameState.js';
 import { saveSystem } from '../../core/SaveSystem.js';
-import { TIER_RACE_REPUTATION_REQUIRED, TIER_THRESHOLDS, CUSTOMER_ICONS } from '../../core/constants.js';
+import { TIER_RACE_REPUTATION_REQUIRED, TIER_THRESHOLDS, CUSTOMER_ICONS, CUSTOMER_TYPES } from '../../core/constants.js';
 import { getAvailableUpgrades, purchaseUpgrade } from '../../progression/Upgrades.js';
 import { getAvailableRecipes, purchaseRecipe } from '../../progression/Recipes.js';
 import { getGoodsById } from '../../market/Goods.js';
@@ -110,6 +110,19 @@ export class UpgradePanel {
           ${raceRepBarsHtml}
         </div>
       `;
+    } else {
+      const raceRepHtml = CUSTOMER_TYPES.map((race) => {
+        const rep = gameState.getRaceReputation(race);
+        const icon = CUSTOMER_ICONS[race] ?? '❓';
+        const name = race.charAt(0).toUpperCase() + race.slice(1);
+        return `<span style="display: inline-block; font-size: 0.8rem; color: var(--ink-dim); margin-right: 12px; margin-bottom: 4px;">${icon} ${name}: <span style="color: var(--gold);">${rep.toLocaleString()}</span></span>`;
+      }).join('');
+      nextTierHtml = `
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--parchment-lighter);">
+          <div style="font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 6px;">⭐ Reputation</div>
+          <div style="font-size: 0.8rem;">${raceRepHtml}</div>
+        </div>
+      `;
     }
 
     panel.innerHTML = `
@@ -154,7 +167,7 @@ export class UpgradePanel {
   private renderTierProgress(target: HTMLElement): void {
     const panel = document.createElement('div');
     panel.className = 'panel';
-    panel.innerHTML = `<div class="panel-header"><h3>🗺️ Market Tiers</h3></div>`;
+    panel.innerHTML = `<div class="panel-header"><h3>🗺️ Markets</h3></div>`;
 
     const tiers = getAllTiers();
     const list = document.createElement('div');
@@ -224,8 +237,8 @@ export class UpgradePanel {
         const hasRanks = upgrade.currentRank >= 1;
         const rankNumColor = hasRanks || isMaxed ? 'var(--green-bright)' : 'var(--gold)';
         const rankBadgeHtml = upgrade.id === 'wider_stall'
-          ? `Slots: <span style="color: ${rankNumColor};">${upgrade.currentRank + 4}</span>`
-          : `Rank <span style="color: ${rankNumColor};">${upgrade.currentRank}</span>/${upgrade.maxRank}`;
+          ? `Slots:&nbsp;<span style="color: ${rankNumColor};">${upgrade.currentRank + 5}</span>`
+          : `Rank&nbsp;<span style="color: ${rankNumColor};">${upgrade.currentRank}</span>/${upgrade.maxRank}`;
         const rankBadgeColor = isMaxed ? 'var(--green-bright)' : 'var(--gold)';
         const item = document.createElement('div');
         item.style.cssText = `

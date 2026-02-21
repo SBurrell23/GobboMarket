@@ -92,6 +92,7 @@ export class MarketStall {
     });
     eventBus.on('recipe:unlocked', () => this.renderSuppliers());
     eventBus.on('upgrade:purchased', () => this.renderSuppliers());
+    eventBus.on('victory:show', () => this.showVictory());
 
     void setInterval(() => this.updateCooldownTimers(), 500);
   }
@@ -246,7 +247,7 @@ export class MarketStall {
     const cust = this.selectedCustomer;
 
     const panel = document.createElement('div');
-    panel.className = 'panel';
+    panel.className = 'panel panel--stall';
 
     let headerExtra = `<span style="font-size: 0.8rem; color: var(--ink-dim);">(${gameState.inventory.length}/${gameState.stallSlots} slots)</span>`;
     if (cust) {
@@ -254,6 +255,8 @@ export class MarketStall {
     }
     panel.innerHTML = `<div class="panel-header"><h3>🏪 Your Stall ${headerExtra}</h3></div>`;
 
+    const headerArea = document.createElement('div');
+    headerArea.className = 'panel--stall__header-area';
     if (cust) {
       const deselectBtn = document.createElement('button');
       deselectBtn.className = 'btn btn-subtle';
@@ -264,8 +267,12 @@ export class MarketStall {
         this.updateCustomerHighlight();
         this.renderStall();
       });
-      panel.appendChild(deselectBtn);
+      headerArea.appendChild(deselectBtn);
     }
+    panel.appendChild(headerArea);
+
+    const scrollWrap = document.createElement('div');
+    scrollWrap.className = 'stall-scroll';
 
     const grid = document.createElement('div');
     grid.className = `goods-grid goods-grid--stall${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
@@ -346,7 +353,8 @@ export class MarketStall {
       }
     }
 
-    panel.appendChild(grid);
+    scrollWrap.appendChild(grid);
+    panel.appendChild(scrollWrap);
     this.stallEl.appendChild(panel);
   }
 

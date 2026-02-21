@@ -22,6 +22,7 @@ export interface GameEvents {
   'screen:changed': { screen: string };
   'inventory:changed': Record<string, never>;
   'stall:upgraded': { slots: number };
+  'victory:show': Record<string, never>;
 }
 
 export type GameEventName = keyof GameEvents;

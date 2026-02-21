@@ -65,7 +65,7 @@ export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
     desiredCategory: desired,
     patience: CUSTOMER_PATIENCE[type] ?? 5,
     haggleTier,
-    budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'elf' ? 1.2 : type === 'goblin' ? 0.8 : 1.0,
+    budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'elf' ? 1.2 : type === 'goblin' ? 0.8 : type === 'orc' ? 0.9 : 1.0,
     arrivedAt: Date.now(),
   };
 }

@@ -133,9 +133,9 @@
 }
 
 .customer-card--selected {
-  border: 1px solid var(--gold) !important;
-  box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(212, 168, 67, 0.6), inset 0 0 0 1px rgba(212, 168, 67, 0.15);
-  background: #453520 !important;
+  border: 2px solid var(--gold-bright) !important;
+  box-shadow: 0 0 0 1px var(--gold), 0 0 20px rgba(212, 168, 67, 0.5), inset 0 0 20px rgba(212, 168, 67, 0.12);
+  background: linear-gradient(135deg, #363126 0%, #282116 100%) !important;
   transition: none !important;
 }
 
