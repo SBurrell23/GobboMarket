@@ -5,6 +5,7 @@ import { TIER_RACE_REPUTATION_REQUIRED, TIER_THRESHOLDS, CUSTOMER_ICONS } from '
 import { getAvailableUpgrades, purchaseUpgrade } from '../../progression/Upgrades.js';
 import { getAvailableRecipes, purchaseRecipe } from '../../progression/Recipes.js';
 import { getGoodsById } from '../../market/Goods.js';
+import { resetCustomerIds } from '../../market/Customer.js';
 import { getCompletedMilestones, getAllMilestones } from '../../progression/Milestones.js';
 import { QUALITY_LABELS } from '../../core/constants.js';
 import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
@@ -218,16 +219,20 @@ export class UpgradePanel {
       list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
       for (const upgrade of upgrades) {
-        const canAfford = gameState.coins >= upgrade.nextCost;
-        const rankLabel = upgrade.id === 'wider_stall'
-          ? `Slots: ${upgrade.currentRank + 4}`
-          : `Rank ${upgrade.currentRank}/${upgrade.maxRank}`;
+        const isMaxed = upgrade.currentRank >= upgrade.maxRank;
+        const canAfford = !isMaxed && gameState.coins >= upgrade.nextCost;
+        const hasRanks = upgrade.currentRank >= 1;
+        const rankNumColor = hasRanks || isMaxed ? 'var(--green-bright)' : 'var(--gold)';
+        const rankBadgeHtml = upgrade.id === 'wider_stall'
+          ? `Slots: <span style="color: ${rankNumColor};">${upgrade.currentRank + 4}</span>`
+          : `Rank <span style="color: ${rankNumColor};">${upgrade.currentRank}</span>/${upgrade.maxRank}`;
+        const rankBadgeColor = isMaxed ? 'var(--green-bright)' : 'var(--gold)';
         const item = document.createElement('div');
         item.style.cssText = `
           display: flex; align-items: center; gap: 8px; padding: 8px;
-          background: var(--parchment-light); border-radius: 4px;
-          border: 1px solid var(--parchment-lighter);
-          opacity: ${canAfford ? '1' : '0.6'};
+          background: ${isMaxed ? 'rgba(74, 139, 74, 0.15)' : 'var(--parchment-light)'}; border-radius: 4px;
+          border: 1px solid ${isMaxed ? 'var(--green-bright)' : 'var(--parchment-lighter)'};
+          opacity: ${canAfford || isMaxed ? '1' : '0.6'};
           cursor: ${canAfford ? 'pointer' : 'default'};
           transition: border-color 0.15s;
         `;
@@ -235,24 +240,24 @@ export class UpgradePanel {
           <span style="font-size: 1.3rem;">${upgrade.icon}</span>
           <div style="flex: 1;">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span style="color: var(--gold); font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</span>
+              <span style="color: ${isMaxed ? 'var(--green-bright)' : 'var(--gold)'}; font-family: var(--font-display); font-size: 0.9rem;">${upgrade.name}</span>
               <span style="
                 display: inline-flex; align-items: center; padding: 1px 5px;
                 background: linear-gradient(135deg, var(--parchment-lighter) 0%, var(--parchment-light) 100%);
-                border: 1px solid var(--gold-dim);
+                border: 1px solid ${isMaxed ? 'var(--green-bright)' : 'var(--gold-dim)'};
                 border-radius: 4px;
-                color: var(--gold);
+                color: ${rankBadgeColor};
                 font-family: var(--font-display);
                 font-size: 0.65rem;
                 font-weight: 600;
                 letter-spacing: 0.02em;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-              ">${rankLabel}</span>
+              ">${rankBadgeHtml}</span>
             </div>
             <div style="color: var(--ink-dim); font-size: 0.8rem;">${upgrade.description}</div>
           </div>
-          <div style="color: ${canAfford ? 'var(--gold)' : 'var(--accent-bright)'}; font-family: var(--font-display); white-space: nowrap;">
-            ${upgrade.nextCost.toLocaleString()} 🪙
+          <div style="color: ${canAfford ? 'var(--gold)' : isMaxed ? 'var(--green-bright)' : 'var(--accent-bright)'}; font-family: var(--font-display); white-space: nowrap;">
+            ${isMaxed ? '✓' : upgrade.nextCost.toLocaleString() + ' 🪙'}
           </div>
         `;
 
@@ -265,7 +270,7 @@ export class UpgradePanel {
             this.render();
           });
         }
-        attachHoverSound(item);
+        if (!isMaxed) attachHoverSound(item);
 
         list.appendChild(item);
       }
@@ -383,6 +388,7 @@ export class UpgradePanel {
       if (confirmEl.dataset.confirming === 'true') {
         saveSystem.deleteSave();
         gameState.reset();
+        resetCustomerIds();
         window.location.reload();
       } else {
         confirmEl.dataset.confirming = 'true';

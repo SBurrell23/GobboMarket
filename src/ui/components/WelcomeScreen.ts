@@ -22,7 +22,7 @@ export class WelcomeScreen {
       position: fixed; inset: 0; z-index: 500;
       display: flex; align-items: flex-start; justify-content: center;
       padding-top: 12vh;
-      background: var(--bg-dark);
+      background: transparent;
     `;
 
     const hasSave = saveSystem.hasSave();
@@ -30,10 +30,10 @@ export class WelcomeScreen {
 
     this.el.innerHTML = `
       <button class="btn btn-subtle" id="welcome-settings" style="position: fixed; top: 16px; right: 16px; z-index: 501; padding: 4px 10px; font-size: 1rem;" title="Settings">⚙️</button>
-      <div class="anim-fade-in" style="text-align: center; max-width: 550px; padding: 24px 32px;">
+      <div class="anim-fade-in panel" style="text-align: center; max-width: 600px; padding: 40px 48px; box-shadow: 0 8px 32px rgba(0,0,0,0.8); background: rgba(45, 32, 17, 0.92);">
         <div style="font-size: 4rem; margin-bottom: 12px;">🏪</div>
         <h1 style="font-size: 2.8rem; margin-bottom: 6px; line-height: 1.1;">Gobbo Market</h1>
-        <p style="color: var(--ink-dim); font-size: 1.05rem; margin-bottom: 24px; line-height: 1.6;">
+        <p style="color: var(--ink-dim); font-size: 1.05rem; margin-bottom: 28px; line-height: 1.6;">
           Buy materials. Forge goods. Haggle with customers.<br>
           Rise from a muddy alley stall to the Grand Exchange.
         </p>
@@ -151,11 +151,10 @@ export class WelcomeScreen {
   }
 
   private dismiss(): void {
+    // Build game and set correct background BEFORE fading so no wrong image flashes
+    this.onStart();
     this.el.style.opacity = '0';
     this.el.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => {
-      this.el.remove();
-      this.onStart();
-    }, 400);
+    setTimeout(() => this.el.remove(), 400);
   }
 }

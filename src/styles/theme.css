@@ -52,15 +52,11 @@ body {
   color: var(--ink);
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(45, 32, 17, 0.8) 0%, transparent 70%),
-    radial-gradient(ellipse at 80% 50%, rgba(45, 32, 17, 0.6) 0%, transparent 70%),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(201, 184, 150, 0.02) 2px,
-      rgba(201, 184, 150, 0.02) 4px
-    );
+    linear-gradient(rgba(17, 12, 4, 0.45), rgba(17, 12, 4, 0.45)),
+    url('/GobboMarket/assets/images/home-screen.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 #app {
@@ -69,6 +65,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: transparent;
 }
 
 h1, h2, h3, h4, h5, h6 {

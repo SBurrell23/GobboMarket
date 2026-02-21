@@ -104,11 +104,10 @@ class GameState {
 
   addCoins(amount: number, source: string): void {
     if (amount <= 0) return;
-    const clamped = Math.min(amount, MAX_COINS - this.state.coins);
-    this.state.coins += clamped;
-    this.state.totalEarned += clamped;
-    eventBus.emit('coins:earned', { amount: clamped, source });
-    eventBus.emit('coins:changed', { amount: clamped, total: this.state.coins });
+    this.state.coins += amount;
+    this.state.totalEarned += amount;
+    eventBus.emit('coins:earned', { amount, source });
+    eventBus.emit('coins:changed', { amount, total: this.state.coins });
     this.checkTierUnlock();
   }
 

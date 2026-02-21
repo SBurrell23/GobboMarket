@@ -138,7 +138,7 @@ export class ForgeGame implements Minigame {
   private finish(): void {
     this.running = false;
     const avgScore = this.strikes.reduce((a, b) => a + b, 0) / this.strikes.length;
-    const quality = avgScore >= 0.9 ? 4 : avgScore >= 0.7 ? 3 : avgScore >= 0.4 ? 2 : avgScore >= 0.15 ? 1 : 0;
+    const quality = avgScore >= 0.85 ? 4 : avgScore >= 0.7 ? 3 : avgScore >= 0.4 ? 2 : avgScore >= 0.15 ? 1 : 0;
     const result: MinigameResult = {
       score: Math.round(avgScore * 100),
       quality,

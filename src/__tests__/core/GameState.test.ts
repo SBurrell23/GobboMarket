@@ -25,9 +25,9 @@ describe('GameState', () => {
       expect(state.coins).toBe(50);
     });
 
-    it('should clamp coins to MAX_COINS', () => {
+    it('should allow coins above 1M (no cap)', () => {
       state.addCoins(2_000_000, 'test');
-      expect(state.coins).toBe(1_000_000);
+      expect(state.coins).toBe(50 + 2_000_000);
       expect(state.hasMaxCoins).toBe(true);
     });
 

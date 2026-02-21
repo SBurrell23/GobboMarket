@@ -1,5 +1,5 @@
 import { gameState } from '../core/GameState.js';
-import { STALL_BASE_SLOTS, STALL_SLOT_UPGRADE_COST_BASE, STALL_SLOT_UPGRADE_COST_MULT, TIER_THRESHOLDS, UPGRADE_COST_CAP } from '../core/constants.js';
+import { STALL_BASE_SLOTS, STALL_SLOT_UPGRADE_COST_BASE, STALL_SLOT_UPGRADE_COST_MULT, UPGRADE_COST_THRESHOLDS } from '../core/constants.js';
 
 export interface UpgradeDefinition {
   id: string;
@@ -17,10 +17,10 @@ function widerStallCost(): number {
   return Math.round(STALL_SLOT_UPGRADE_COST_BASE * Math.pow(STALL_SLOT_UPGRADE_COST_MULT, extraSlots));
 }
 
-/** Cost for rank R of a tier-T upgrade: uses tier thresholds, capped so upgrades stay affordable vs 1M goal. */
+/** Cost for rank R of a tier-T upgrade: uses upgrade cost thresholds (gentler scaling for high tiers). */
 function tierScaledCost(tier: number, rank: number): number {
-  const idx = Math.min(tier + rank, TIER_THRESHOLDS.length - 1);
-  return Math.min(TIER_THRESHOLDS[idx], UPGRADE_COST_CAP);
+  const idx = Math.min(tier + rank, UPGRADE_COST_THRESHOLDS.length - 1);
+  return UPGRADE_COST_THRESHOLDS[idx];
 }
 
 export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
@@ -56,7 +56,7 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'hagglers_dice',
     name: "Haggler's Dice",
-    description: '-1 to customer roll per rank',
+    description: '-1 to customer roll',
     tier: 1,
     maxRank: 5,
     icon: '🎲',
@@ -85,7 +85,7 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'reputation_boost',
     name: 'Reputation Boost',
-    description: '+1 base reputation per sale per rank',
+    description: '+1 base reputation per sale',
     tier: 3,
     maxRank: 5,
     icon: '⭐',
@@ -99,13 +99,13 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
     tier: 4,
     maxRank: 4,
     icon: '⚡',
-    costForRank: (rank) => tierScaledCost(4, rank),
+    costForRank: (rank) => [20_000, 32_000, 50_000, 75_000][rank - 1] ?? 75_000,
   },
-  // Tier 5 (Guild District)
+  // Tier 5 (Guild Quarters)
   {
     id: 'supply_chain',
     name: 'Supply Chain',
-    description: '-10% cooldown on bought goods per rank',
+    description: '-10% cooldown on bought goods',
     tier: 5,
     maxRank: 5,
     icon: '📦',
@@ -124,13 +124,13 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'efficient_workshop',
     name: 'Efficient Workshop',
-    description: '-10% cooldown on forged items per rank',
+    description: '-10% cooldown on forged items',
     tier: 6,
     maxRank: 5,
     icon: '🏭',
     costForRank: (rank) => tierScaledCost(6, rank),
   },
-  // Tier 7 (Diamond Exchange) - merchant_guild removed
+  // Tier 7 (Diamond District) - merchant_guild removed
   // Tier 8 (Grand Exchange)
   {
     id: 'master_supplier',
@@ -159,10 +159,7 @@ export function getAvailableUpgrades(): Array<UpgradeDefinition & { currentRank:
       }
       return { ...u, currentRank, nextCost };
     })
-    .filter((u) => {
-      if (u.id === 'wider_stall') return true;
-      return u.currentRank < u.maxRank;
-    });
+    .filter(() => true); // Include maxed upgrades so they stay visible
 }
 
 export function purchaseUpgrade(upgradeId: string): boolean {

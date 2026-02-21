@@ -6,7 +6,7 @@ import './styles/animations.css';
 import { initSounds, soundManager } from './audio/initSounds.js';
 import { showSettingsModal } from './ui/components/SettingsModal.js';
 import { gameState } from './core/GameState.js';
-import { TIER_NAMES, CUSTOMER_TIER_UNLOCK, CUSTOMER_ICONS } from './core/constants.js';
+import { TIER_NAMES, TIER_BACKGROUND_IMAGES, TIER_RACE_REPUTATION_REQUIRED, CUSTOMER_TIER_UNLOCK, CUSTOMER_ICONS } from './core/constants.js';
 import { eventBus } from './core/EventBus.js';
 import { saveSystem } from './core/SaveSystem.js';
 import { customerQueue } from './market/CustomerQueue.js';
@@ -16,7 +16,6 @@ import { HeaderProgress } from './ui/components/HeaderProgress.js';
 import { MarketStall } from './ui/components/MarketStall.js';
 import { UpgradePanel } from './ui/components/UpgradePanel.js';
 import { WelcomeScreen } from './ui/components/WelcomeScreen.js';
-import { checkMilestones } from './progression/Milestones.js';
 
 function showRepToast(amount: number, race: string): void {
   const icon = CUSTOMER_ICONS[race] ?? '❓';
@@ -27,6 +26,15 @@ function showRepToast(amount: number, race: string): void {
   setTimeout(() => toast.remove(), 2450);
 }
 
+const IMAGES_BASE = `${import.meta.env.BASE_URL}assets/images/`;
+
+function updateBackgroundImage(): void {
+  const tier = gameState.currentTier;
+  const filename = TIER_BACKGROUND_IMAGES[tier] ?? TIER_BACKGROUND_IMAGES[0];
+  const url = `${IMAGES_BASE}${filename}`;
+  document.body.style.backgroundImage = `linear-gradient(rgba(17, 12, 4, 0.45), rgba(17, 12, 4, 0.45)), url('${url}')`;
+}
+
 function boot(): void {
   initSounds();
 
@@ -35,11 +43,14 @@ function boot(): void {
   // Show welcome screen; game starts after user clicks
   new WelcomeScreen(document.body, () => {
     soundManager.play('game_start');
+    // Build game and set correct tier background BEFORE fading welcome screen to avoid flash
     startGame(app);
   });
 }
 
 function startGame(app: HTMLElement): void {
+  updateBackgroundImage();
+
   // Toast container: centers gold + rep toasts together at bottom
   const toastContainer = document.createElement('div');
   toastContainer.id = 'toast-container';
@@ -150,9 +161,10 @@ function startGame(app: HTMLElement): void {
   // Auto-save whenever coins change
   eventBus.on('coins:changed', () => saveSystem.save());
 
-  // Update header displays on changes
+  // Update header displays and background on tier change
   eventBus.on('tier:unlocked', ({ name }) => {
     updateTierDisplay(tierEl);
+    updateBackgroundImage();
     showTierNotification(name);
   });
 
@@ -160,14 +172,82 @@ function startGame(app: HTMLElement): void {
     if (amount > 0) showRepToast(amount, race);
   });
 
-  // Check milestones periodically
-  eventBus.on('coins:changed', () => checkMilestones());
+  // Milestones are checked after sales (showNewMilestones) and after craft/buy; not on coins:changed
+  // so the 1M milestone popup and victory modal show correctly when crossing the threshold.
 
   // Prevent accidental close
   window.addEventListener('beforeunload', (e) => {
     saveSystem.save();
     if (gameState.data.totalEarned > 100) {
       e.preventDefault();
+    }
+  });
+
+  // Dev overlay: tilde to toggle, add gold for testing
+  const devOverlay = document.createElement('div');
+  devOverlay.id = 'dev-overlay';
+  devOverlay.style.cssText = `
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: var(--bg-dark);
+    border: 2px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 16px 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    font-family: var(--font-body);
+  `;
+  devOverlay.innerHTML = `
+    <div style="color: var(--gold); font-weight: 600; margin-bottom: 12px; font-size: 0.9rem;">Dev Tools</div>
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+      <input type="number" id="dev-gold-input" placeholder="Gold amount" min="1" step="1"
+        style="width: 120px; padding: 8px 12px; background: var(--parchment); border: 1px solid var(--parchment-lighter); border-radius: 4px; color: var(--ink); font-size: 0.95rem;">
+      <button type="button" id="dev-gold-add" class="btn btn-gold" style="padding: 8px 16px;">Add Gold</button>
+    </div>
+    <button type="button" id="dev-rep-add" class="btn btn-subtle" style="padding: 8px 16px; width: 100%;">Add Next Tier Rep</button>
+    <div style="margin-top: 8px; font-size: 0.8rem; color: var(--ink-dim);">Press ~ to close</div>
+  `;
+  document.body.appendChild(devOverlay);
+
+  const devInput = devOverlay.querySelector('#dev-gold-input') as HTMLInputElement;
+  const devAddBtn = devOverlay.querySelector('#dev-gold-add')!;
+  const devRepBtn = devOverlay.querySelector('#dev-rep-add')!;
+
+  devAddBtn.addEventListener('click', () => {
+    const amount = parseInt(devInput.value, 10);
+    if (!amount || amount <= 0) return;
+    gameState.addCoins(amount, 'dev');
+    devInput.value = '';
+  });
+
+  devInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') devAddBtn.dispatchEvent(new Event('click'));
+  });
+
+  devRepBtn.addEventListener('click', () => {
+    const nextTier = gameState.currentTier + 1;
+    if (nextTier >= TIER_NAMES.length) return;
+    const raceReqs = TIER_RACE_REPUTATION_REQUIRED[nextTier];
+    if (!raceReqs) return;
+    for (const [race, required] of Object.entries(raceReqs)) {
+      const current = gameState.getRaceReputation(race);
+      const needed = Math.max(0, required - current);
+      if (needed > 0) gameState.addRaceReputation(race, needed);
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '`' || e.key === '~') {
+      e.preventDefault();
+      const visible = devOverlay.style.display === 'block';
+      devOverlay.style.display = visible ? 'none' : 'block';
+      if (!visible) devInput.focus();
+    }
+    if (e.key === 'Escape' && devOverlay.style.display === 'block') {
+      devOverlay.style.display = 'none';
     }
   });
 

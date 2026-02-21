@@ -86,7 +86,10 @@ export class MarketStall {
     });
     eventBus.on('tier:unlocked', () => this.render());
     eventBus.on('coins:changed', () => this.renderSuppliers());
-    eventBus.on('stall:upgraded', () => this.renderStall());
+    eventBus.on('stall:upgraded', () => {
+      this.renderStall();
+      this.renderSuppliers();
+    });
     eventBus.on('recipe:unlocked', () => this.renderSuppliers());
     eventBus.on('upgrade:purchased', () => this.renderSuppliers());
 
@@ -663,21 +666,21 @@ export class MarketStall {
     this.minigameContainer.innerHTML = `
       <div style="text-align: center; padding: 32px;">
         <div style="font-size: 4rem; margin-bottom: 16px;">👑🪙👑</div>
-        <h1 style="margin-bottom: 12px; font-size: 2rem;">Goblin Tycoon!</h1>
+        <h1 style="margin-bottom: 12px; font-size: 2rem;">Goblin Tycoon</h1>
         <p style="color: var(--gold); font-size: 1.2rem; margin-bottom: 8px;">
           You've amassed 1,000,000 gold coins!
         </p>
         <p style="color: var(--ink); margin-bottom: 24px;">
-          From a muddy alley stall to the Grand Exchange, you've become the greatest merchant the realm has ever known.
+          From a muddy alley stall to the Grand Exchange! You've become the greatest gobbo merchant the realm has ever known!
         </p>
         <p style="color: var(--ink-dim); margin-bottom: 8px;">
-          Items crafted: ${gameState.data.itemsCrafted} | Items sold: ${gameState.data.itemsSold}
+          Items sold: ${gameState.data.itemsSold} |  Haggle wins: ${gameState.data.haggleWins}
         </p>
         <p style="color: var(--ink-dim); margin-bottom: 24px;">
-          Haggle wins: ${gameState.data.haggleWins} | Total earned: ${gameState.data.totalEarned.toLocaleString()} 🪙
+          Total gold earned: ${gameState.data.totalEarned.toLocaleString()} 🪙
         </p>
         <p style="color: var(--gold); font-size: 0.95rem; margin-bottom: 24px;">
-          Send a screenshot of this modal to Steven to receive your 1,000,000 cash prize!
+          Send a screenshot of this modal to Steven to receive your 1,000,000 prize!
         </p>
         <button class="btn btn-gold close-btn">Continue Playing</button>
       </div>

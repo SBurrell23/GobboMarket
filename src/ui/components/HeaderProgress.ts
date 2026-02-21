@@ -33,7 +33,7 @@ export class HeaderProgress {
     if (nextTier >= TIER_NAMES.length) {
       const maxEl = document.createElement('span');
       maxEl.style.cssText = 'font-size: 0.85rem; color: var(--gold-dim);';
-      maxEl.textContent = 'Max tier';
+      maxEl.textContent = 'Reach 1,000,000 Coins!';
       this.container.appendChild(maxEl);
       return;
     }

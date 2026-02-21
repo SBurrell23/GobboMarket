@@ -47,7 +47,7 @@ const ALL_GOODS: GoodsDefinition[] = [
   { id: 'royal_feast', name: 'Royal Feast', icon: '🍗', basePrice: 300, category: 'food', tier: 4, description: 'A spread fit for a king.', craftable: false, materialCost: 160, cooldown: 249 },
   { id: 'crown_jewel', name: 'Crown Jewel', icon: '👑', basePrice: 550, category: 'trinket', tier: 4, description: 'A gem of extraordinary brilliance.', craftable: false, materialCost: 300, cooldown: 249 },
 
-  // Tier 5 - Guild District (Forge 540s / Buy 384s)
+  // Tier 5 - Guild Quarters (Forge 540s / Buy 384s)
   { id: 'runic_greatsword', name: 'Runic Trident', icon: '🔱', basePrice: 1200, category: 'weapon', tier: 5, description: 'Covered in glowing runic inscriptions.', craftable: true, materialCost: 650, cooldown: 540 },
   { id: 'arcane_ward', name: 'Arcane Ward', icon: '🌀', basePrice: 1400, category: 'armor', tier: 5, description: 'Shimmering magical barrier made solid.', craftable: true, materialCost: 760, cooldown: 540 },
   { id: 'invisibility_draught', name: 'Invisibility Draught', icon: '👻', basePrice: 900, category: 'potion', tier: 5, description: 'Renders the drinker unseen for one hour.', craftable: true, materialCost: 500, cooldown: 540 },
@@ -61,7 +61,7 @@ const ALL_GOODS: GoodsDefinition[] = [
   { id: 'ambrosia', name: 'Ambrosia', icon: '🍯', basePrice: 1800, category: 'food', tier: 6, description: 'Food of the gods.', craftable: false, materialCost: 980, cooldown: 540 },
   { id: 'philosophers_stone', name: "Philosopher's Stone", icon: '⚗️', basePrice: 3500, category: 'trinket', tier: 6, description: 'Transmutes the mundane into the extraordinary.', craftable: false, materialCost: 1900, cooldown: 540 },
 
-  // Tier 7 - Diamond Exchange (Forge 960s / Buy 660s) — ~2.5 min more than T6
+  // Tier 7 - Diamond District (Forge 960s / Buy 660s) — ~2.5 min more than T6
   { id: 'blade_of_ages', name: 'Blade of Ages', icon: '✂️', basePrice: 6000, category: 'weapon', tier: 7, description: 'Forged before recorded history. Still razor sharp.', craftable: true, materialCost: 3300, cooldown: 960 },
   { id: 'celestial_armor', name: 'Celestial Armor', icon: '🌟', basePrice: 7500, category: 'armor', tier: 7, description: 'Woven from starlight and divine protection.', craftable: true, materialCost: 4100, cooldown: 960 },
   { id: 'time_flask', name: 'Time Flask', icon: '⏳', basePrice: 5000, category: 'potion', tier: 7, description: 'Freezes a moment in time. Handle with extreme care.', craftable: true, materialCost: 2750, cooldown: 960 },
