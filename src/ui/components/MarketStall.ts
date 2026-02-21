@@ -652,8 +652,8 @@ export class MarketStall {
       eventBus.emit('customer:left', { customerId: customer.id, satisfied: true });
 
       const customerRoll = result.customerRoll ?? 0;
-      if (!won && customerRoll <= 5) gameState.setLostHaggleWithCustomerRoll5OrLess();
-      if (result.haggleOutcome === 'bust' && result.multiplier <= 0.69) gameState.setBustedWithMultiplier069OrLess();
+      if (!won && customerRoll <= 3) gameState.setLostHaggleWithCustomerRoll3OrLess();
+      if (!won && result.multiplier <= 0.65) gameState.setLostHaggleWithMultiplier065OrLess();
       if (item.quality === 4 && item.enchanted && item.enchantMultiplier >= 2.99 && isDesired && won) gameState.setPerfectReputationSell();
       if (item.goodsId === 'elven_bread' && customer.type === 'halfling') gameState.recordWaybreadToHalfling();
       if (item.goodsId === 'infinity_gem' && customer.type === 'wizard') gameState.setSoldInfinityGemToWizard();

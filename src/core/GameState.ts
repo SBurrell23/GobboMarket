@@ -40,12 +40,12 @@ export interface GameStateData {
   cooldowns: Record<string, number>;
   /** Milestone: sell Elven Waybread to halflings */
   waybreadSoldToHalfling?: number;
-  /** Milestone: lose haggle when customer rolled 5 or less */
-  lostHaggleWithCustomerRoll5OrLess?: boolean;
+  /** Milestone: lose haggle when customer rolled 3 or less */
+  lostHaggleWithCustomerRoll3OrLess?: boolean;
   /** Milestone: complete enchant at 9/9 */
   enchantedPerfectly?: boolean;
-  /** Milestone: bust haggle with multiplier 0.69 or better */
-  bustedWithMultiplier069OrLess?: boolean;
+  /** Milestone: lose haggle with multiplier 0.65 or less */
+  lostHaggleWithMultiplier065OrLess?: boolean;
   /** Milestone: sell masterwork 9/9 enchanted desired item and win haggle */
   perfectReputationSell?: boolean;
   /** Milestone: listen to every song - track filenames that have played at least once */
@@ -256,16 +256,16 @@ class GameState {
     this.state.waybreadSoldToHalfling = (this.state.waybreadSoldToHalfling ?? 0) + 1;
   }
 
-  setLostHaggleWithCustomerRoll5OrLess(): void {
-    this.state.lostHaggleWithCustomerRoll5OrLess = true;
+  setLostHaggleWithCustomerRoll3OrLess(): void {
+    this.state.lostHaggleWithCustomerRoll3OrLess = true;
   }
 
   setEnchantedPerfectly(): void {
     this.state.enchantedPerfectly = true;
   }
 
-  setBustedWithMultiplier069OrLess(): void {
-    this.state.bustedWithMultiplier069OrLess = true;
+  setLostHaggleWithMultiplier065OrLess(): void {
+    this.state.lostHaggleWithMultiplier065OrLess = true;
   }
 
   setPerfectReputationSell(): void {
@@ -389,6 +389,13 @@ class GameState {
         craftsByQuality: parsed.craftsByQuality ?? base.craftsByQuality,
       };
       if (this.state.coins >= MAX_COINS) this.state.hasEverReachedMaxCoins = true;
+      // Migrate milestone field renames
+      if ((parsed as { lostHaggleWithCustomerRoll5OrLess?: boolean }).lostHaggleWithCustomerRoll5OrLess) {
+        this.state.lostHaggleWithCustomerRoll3OrLess = true;
+      }
+      if ((parsed as { bustedWithMultiplier069OrLess?: boolean }).bustedWithMultiplier069OrLess) {
+        this.state.lostHaggleWithMultiplier065OrLess = true;
+      }
       return true;
     } catch {
       return false;

@@ -98,9 +98,9 @@ export const MILESTONES: MilestoneDefinition[] = [
   {
     id: 'unlucky_underdog',
     name: 'Unlucky!',
-    description: 'Lose a haggle when the customer rolled 5 or less.',
+    description: 'Lose a haggle when the customer rolled 3 or less.',
     icon: '😅',
-    check: () => gameState.data.lostHaggleWithCustomerRoll5OrLess === true,
+    check: () => gameState.data.lostHaggleWithCustomerRoll3OrLess === true,
   },
   {
     id: 'strong_fingers',
@@ -126,9 +126,9 @@ export const MILESTONES: MilestoneDefinition[] = [
   {
     id: 'lucky_bust',
     name: 'That Stings!',
-    description: 'Bust a haggle with a price multiplier of 0.69 or less.',
+    description: 'Lose a haggle with a price multiplier of 0.65.',
     icon: '🎲',
-    check: () => gameState.data.bustedWithMultiplier069OrLess === true,
+    check: () => gameState.data.lostHaggleWithMultiplier065OrLess === true,
   },
   {
     id: 'legendary_deal',
@@ -154,9 +154,9 @@ export const MILESTONES: MilestoneDefinition[] = [
   {
     id: 'waybread_merchant',
     name: 'Lembas',
-    description: 'Sell 9 Elven Waybread to halflings.',
+    description: 'Sell 4 Elven Waybread to halflings.',
     icon: '🍞',
-    check: () => (gameState.data.waybreadSoldToHalfling ?? 0) >= 9,
+    check: () => (gameState.data.waybreadSoldToHalfling ?? 0) >= 4,
   },
   {
     id: 'garbage_heap',
