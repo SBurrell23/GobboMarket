@@ -3,8 +3,16 @@ import { QUALITY_LABELS } from '../core/constants.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 
-const WAIT_MIN_MS = 1000;
-const WAIT_MAX_MS = 6000;
+/** Returns [minMs, maxMs] for the tier. T1=1-3s, T2=1-4s, T3=1-5s, T4=1-6s, T5=2-7s, T6=2-8s, T7+=2-10s */
+function getWaitRangeMs(tier: number): [number, number] {
+  if (tier >= 4) {
+    const maxMs = Math.min(10000, (tier + 3) * 1000);
+    return [2000, maxMs];
+  }
+  const minMs = 1000;
+  const maxMs = (3 + tier) * 1000;
+  return [minMs, maxMs];
+}
 const REACTION_MASTERWORK_MS = 250;
 const REACTION_SUPERIOR_MS = 300;
 const REACTION_FINE_MS = 450;
@@ -35,6 +43,8 @@ function reactionMsToQuality(ms: number, wasEarly: boolean): number {
 export class ReactionTimeGame implements Minigame {
   readonly type = 'appraisal';
   onComplete: ((result: MinigameResult) => void) | null = null;
+  /** Called immediately when result is ready (before report). Use to add item + cooldown so refresh can't bypass. */
+  onResult: ((result: MinigameResult) => void) | null = null;
 
   private container: HTMLElement | null = null;
   private phase: Phase = 'waiting';
@@ -43,13 +53,16 @@ export class ReactionTimeGame implements Minigame {
   private clickHandler: (() => void) | null = null;
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  start(container: HTMLElement): void {
+  start(container: HTMLElement, options?: { tier?: number }): void {
     this.container = container;
     this.container.innerHTML = '';
     this.phase = 'waiting';
 
+    const tier = options?.tier ?? 0;
+    const [waitMinMs, waitMaxMs] = getWaitRangeMs(tier);
+
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'text-align: center; padding: 32px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;';
+    wrapper.style.cssText = 'text-align: center; padding: 32px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none;';
     wrapper.id = 'reaction-game-area';
 
     wrapper.innerHTML = `
@@ -73,7 +86,7 @@ export class ReactionTimeGame implements Minigame {
     window.addEventListener('keydown', this.keyHandler);
 
     soundManager.playLoop('reaction_clock_tick', { volume: 0.4 });
-    const delay = WAIT_MIN_MS + Math.random() * (WAIT_MAX_MS - WAIT_MIN_MS);
+    const delay = waitMinMs + Math.random() * (waitMaxMs - waitMinMs);
     this.waitTimeout = setTimeout(() => this.showBuy(), delay);
   }
 
@@ -113,7 +126,8 @@ export class ReactionTimeGame implements Minigame {
     const score = wasEarly ? 0 : Math.max(0, Math.round(100 - reactionMs / 5));
 
     if (quality >= 4) soundManager.play('reaction_masterwork');
-    else if (quality >= 2) soundManager.play('reaction_good');
+    else if (quality >= 3) soundManager.play('reaction_superior');
+    else if (quality >= 2) soundManager.play('reaction_fine');
     else if (quality >= 1) soundManager.play('reaction_passable');
     else soundManager.play('reaction_shoddy');
 
@@ -122,6 +136,15 @@ export class ReactionTimeGame implements Minigame {
       clearTimeout(this.waitTimeout);
       this.waitTimeout = null;
     }
+
+    const result: MinigameResult = {
+      score,
+      quality,
+      multiplier: 1,
+      completed: true,
+      reactionMs: wasEarly ? undefined : reactionMs,
+    };
+    if (this.onResult) this.onResult(result);
 
     const areaEl = this.container.querySelector('#reaction-game-area');
     if (areaEl) {
@@ -136,12 +159,6 @@ export class ReactionTimeGame implements Minigame {
       `;
 
       (areaEl as HTMLElement).querySelector('.done-btn')!.addEventListener('click', () => {
-        const result: MinigameResult = {
-          score,
-          quality,
-          multiplier: 1,
-          completed: true,
-        };
         if (this.onComplete) this.onComplete(result);
       });
     }

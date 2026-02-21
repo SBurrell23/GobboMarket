@@ -215,6 +215,7 @@ export class HaggleGame implements Minigame {
         multiplier,
         completed: true,
         haggleOutcome: this.outcome ?? undefined,
+        customerRoll: this.customerRoll,
       };
       if (this.onComplete) this.onComplete(result);
     });

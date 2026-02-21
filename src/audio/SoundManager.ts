@@ -1,5 +1,6 @@
 import type { SoundId } from './sounds.js';
 import { SOUND_PATHS } from './sounds.js';
+import { eventBus } from '../core/EventBus.js';
 
 const SETTINGS_KEY = 'gobbo-market-settings';
 const SFX_BASE = 'assets/sounds/Cute UI _ Interact Sound Effects Pack/AUDIO/';
@@ -228,6 +229,7 @@ export class SoundManager {
     this.applyMusicVolumeToElement(audio);
     audio.src = url;
     this.musicElement = audio;
+    eventBus.emit('music:track_started', { filename });
     audio.play().catch(() => {
       // Autoplay or missing file
     });

@@ -1,6 +1,6 @@
 import { eventBus } from '../core/EventBus.js';
 
-export type ScreenName = 'market' | 'forge' | 'runecraft' | 'upgrades' | 'progress' | 'help';
+export type ScreenName = 'market' | 'forge' | 'runecraft' | 'upgrades' | 'progress' | 'milestones' | 'help';
 
 export class ScreenManager {
   private screens = new Map<ScreenName, HTMLElement>();

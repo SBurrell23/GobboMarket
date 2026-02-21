@@ -42,7 +42,7 @@ const ALL_GOODS: GoodsDefinition[] = [
 
   // Tier 4 - Merchant Quarter (Forge 360s / Buy 249s)
   { id: 'mithril_blade', name: 'Mithril Axe', icon: '🪓', basePrice: 500, category: 'weapon', tier: 4, description: 'Light as a feather, strong as dragon scale.', craftable: true, materialCost: 280, cooldown: 360 },
-  { id: 'dragon_scale_mail', name: 'Dragon Scale Mail', icon: '🐉', basePrice: 650, category: 'armor', tier: 4, description: 'Armor forged from genuine dragon scales.', craftable: true, materialCost: 350, cooldown: 360 },
+  { id: 'dragon_scale_mail', name: 'Dragon Vest', icon: '🐉', basePrice: 650, category: 'armor', tier: 4, description: 'Armor forged from genuine dragon scales.', craftable: true, materialCost: 350, cooldown: 360 },
   { id: 'phoenix_tears', name: 'Phoenix Tears', icon: '✨', basePrice: 400, category: 'potion', tier: 4, description: 'A vial of liquid rebirth.', craftable: true, materialCost: 220, cooldown: 360 },
   { id: 'royal_feast', name: 'Royal Feast', icon: '🍗', basePrice: 300, category: 'food', tier: 4, description: 'A spread fit for a king.', craftable: false, materialCost: 160, cooldown: 249 },
   { id: 'crown_jewel', name: 'Crown Jewel', icon: '👑', basePrice: 550, category: 'trinket', tier: 4, description: 'A gem of extraordinary brilliance.', craftable: false, materialCost: 300, cooldown: 249 },

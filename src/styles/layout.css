@@ -159,7 +159,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 3px;
+  scrollbar-gutter: stable;
 }
 .market-layout__sidebar:last-child {
   overflow: hidden;

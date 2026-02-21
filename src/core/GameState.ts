@@ -38,6 +38,24 @@ export interface GameStateData {
   haggleWins: number;
   haggleLosses: number;
   cooldowns: Record<string, number>;
+  /** Milestone: sell Elven Waybread to halflings */
+  waybreadSoldToHalfling?: number;
+  /** Milestone: lose haggle when customer rolled 5 or less */
+  lostHaggleWithCustomerRoll5OrLess?: boolean;
+  /** Milestone: complete enchant at 9/9 */
+  enchantedPerfectly?: boolean;
+  /** Milestone: bust haggle with multiplier 0.69 or better */
+  bustedWithMultiplier069OrLess?: boolean;
+  /** Milestone: sell masterwork 9/9 enchanted desired item and win haggle */
+  perfectReputationSell?: boolean;
+  /** Milestone: listen to every song - track filenames that have played at least once */
+  songsHeard?: string[];
+  /** Milestone: forge an item with combined score 198+ */
+  forgedElvenSteel?: boolean;
+  /** Milestone: buy an item with reaction time 175ms or less */
+  boughtWithReaction175OrLess?: boolean;
+  /** Milestone: sell an Infinity Gem to a wizard */
+  soldInfinityGemToWizard?: boolean;
 }
 
 function createDefaultState(): GameStateData {
@@ -232,6 +250,44 @@ class GameState {
     } else {
       this.state.haggleLosses++;
     }
+  }
+
+  recordWaybreadToHalfling(): void {
+    this.state.waybreadSoldToHalfling = (this.state.waybreadSoldToHalfling ?? 0) + 1;
+  }
+
+  setLostHaggleWithCustomerRoll5OrLess(): void {
+    this.state.lostHaggleWithCustomerRoll5OrLess = true;
+  }
+
+  setEnchantedPerfectly(): void {
+    this.state.enchantedPerfectly = true;
+  }
+
+  setBustedWithMultiplier069OrLess(): void {
+    this.state.bustedWithMultiplier069OrLess = true;
+  }
+
+  setPerfectReputationSell(): void {
+    this.state.perfectReputationSell = true;
+  }
+
+  recordSongHeard(filename: string): void {
+    const heard = this.state.songsHeard ?? [];
+    if (heard.includes(filename)) return;
+    this.state.songsHeard = [...heard, filename];
+  }
+
+  setForgedElvenSteel(): void {
+    this.state.forgedElvenSteel = true;
+  }
+
+  setBoughtWithReaction175OrLess(): void {
+    this.state.boughtWithReaction175OrLess = true;
+  }
+
+  setSoldInfinityGemToWizard(): void {
+    this.state.soldInfinityGemToWizard = true;
   }
 
   isOnCooldown(goodsId: string): boolean {

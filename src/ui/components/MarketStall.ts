@@ -11,6 +11,7 @@ import { ReactionTimeGame } from '../../minigames/ReactionTimeGame.js';
 import { RuneCraftGame } from '../../minigames/RuneCraftGame.js';
 import { awardReputation } from '../../progression/Reputation.js';
 import { checkMilestones } from '../../progression/Milestones.js';
+import { saveSystem } from '../../core/SaveSystem.js';
 import { showTooltip, hideTooltip } from './Tooltip.js';
 import { attachHoverSound } from '../../audio/attachHoverSound.js';
 
@@ -89,9 +90,14 @@ export class MarketStall {
     eventBus.on('stall:upgraded', () => {
       this.renderStall();
       this.renderSuppliers();
+      this.showNewMilestones();
     });
     eventBus.on('recipe:unlocked', () => this.renderSuppliers());
-    eventBus.on('upgrade:purchased', () => this.renderSuppliers());
+    eventBus.on('upgrade:purchased', () => {
+      this.renderSuppliers();
+      this.showNewMilestones();
+    });
+    eventBus.on('music:track_started', () => this.showNewMilestones());
     eventBus.on('victory:show', () => this.showVictory());
 
     void setInterval(() => this.updateCooldownTimers(), 500);
@@ -401,10 +407,20 @@ export class MarketStall {
     // Remove cards for customers who left
     for (const [id, card] of this.customerCardMap) {
       if (!currentIds.has(id)) {
+        card.style.overflow = 'hidden';
+        card.style.boxSizing = 'border-box';
+        const h = card.offsetHeight;
+        card.style.maxHeight = `${h}px`;
+        card.style.margin = '0';
+        card.style.transition = 'opacity 0.25s ease, max-height 0.25s ease, padding 0.25s ease, margin 0.25s ease';
         card.style.opacity = '0';
-        card.style.transform = 'translateX(20px)';
-        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        setTimeout(() => card.remove(), 300);
+        void card.offsetHeight; // force reflow
+        card.style.maxHeight = '0';
+        card.style.padding = '0';
+        card.style.margin = '0';
+        setTimeout(() => {
+          card.remove();
+        }, 250);
         this.customerCardMap.delete(id);
         this.patienceBars = this.patienceBars.filter(pb => pb.customer.id !== id);
       }
@@ -524,10 +540,11 @@ export class MarketStall {
       gameState.addToInventory(item);
       gameState.recordCraft(result.quality);
       gameState.startCooldown(goods.id, goods.cooldown);
+      if ((result.forgeCombinedScore ?? 0) >= 198) gameState.setForgedElvenSteel();
 
       this.hideOverlay();
       this.render();
-      checkMilestones();
+      this.showNewMilestones();
     };
 
     forge.start(this.minigameContainer.querySelector('#forge-area')!);
@@ -544,10 +561,7 @@ export class MarketStall {
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">📦 Buying ${goods.name}</h2><div id="appraisal-area"></div>`;
 
     const reactionGame = new ReactionTimeGame();
-    reactionGame.onComplete = (result) => {
-      reactionGame.destroy();
-      eventBus.emit('minigame:completed', { type: 'appraisal', score: result.score });
-
+    reactionGame.onResult = (result) => {
       const item: InventoryItem = {
         id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         goodsId: goods.id,
@@ -556,17 +570,22 @@ export class MarketStall {
         enchantMultiplier: 1,
         basePrice: goods.basePrice,
       };
-
       gameState.addToInventory(item);
       gameState.recordAcquiredQuality(result.quality);
       gameState.startCooldown(goods.id, goods.cooldown);
+      if (result.reactionMs !== undefined && result.reactionMs <= 175) gameState.setBoughtWithReaction175OrLess();
+      eventBus.emit('minigame:completed', { type: 'appraisal', score: result.score });
       eventBus.emit('item:bought', { itemId: goods.id, price: cost });
+      saveSystem.save();
+      this.showNewMilestones();
+    };
+    reactionGame.onComplete = () => {
+      reactionGame.destroy();
       this.hideOverlay();
       this.render();
-      checkMilestones();
     };
 
-    reactionGame.start(this.minigameContainer.querySelector('#appraisal-area')!);
+    reactionGame.start(this.minigameContainer.querySelector('#appraisal-area')!, { tier: goods.tier });
   }
 
   private startEnchanting(item: InventoryItem): void {
@@ -581,6 +600,8 @@ export class MarketStall {
       rune.destroy();
       eventBus.emit('minigame:completed', { type: 'runecraft', score: result.score });
 
+      if (result.multiplier >= 2.99) gameState.setEnchantedPerfectly();
+
       // Always apply enchant on completion (even x1.0 at 0/9) so user can't retry for a better roll
       item.enchanted = true;
       item.enchantMultiplier = result.multiplier;
@@ -588,6 +609,7 @@ export class MarketStall {
 
       this.hideOverlay();
       this.render();
+      this.showNewMilestones();
     };
 
     rune.start(this.minigameContainer.querySelector('#runecraft-area')!);
@@ -628,6 +650,13 @@ export class MarketStall {
       customerQueue.removeCustomer(customer.id);
       eventBus.emit('item:sold', { itemId: item.id, price: priceCalc.finalPrice, customerId: customer.id });
       eventBus.emit('customer:left', { customerId: customer.id, satisfied: true });
+
+      const customerRoll = result.customerRoll ?? 0;
+      if (!won && customerRoll <= 5) gameState.setLostHaggleWithCustomerRoll5OrLess();
+      if (result.haggleOutcome === 'bust' && result.multiplier <= 0.69) gameState.setBustedWithMultiplier069OrLess();
+      if (item.quality === 4 && item.enchanted && item.enchantMultiplier >= 2.99 && isDesired && won) gameState.setPerfectReputationSell();
+      if (item.goodsId === 'elven_bread' && customer.type === 'halfling') gameState.recordWaybreadToHalfling();
+      if (item.goodsId === 'infinity_gem' && customer.type === 'wizard') gameState.setSoldInfinityGemToWizard();
 
       this.hideOverlay();
       this.renderStall();

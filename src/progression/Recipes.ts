@@ -31,7 +31,7 @@ export const RECIPES: RecipeDefinition[] = [
 
   // Tier 4
   { id: 'mithril_blade', name: 'Mithril Axe', goodsId: 'mithril_blade', cost: 2500, tier: 4 },
-  { id: 'dragon_scale_mail', name: 'Dragon Scale Mail', goodsId: 'dragon_scale_mail', cost: 3000, tier: 4 },
+  { id: 'dragon_scale_mail', name: 'Dragon Vest', goodsId: 'dragon_scale_mail', cost: 3000, tier: 4 },
   { id: 'phoenix_tears', name: 'Phoenix Tears', goodsId: 'phoenix_tears', cost: 2000, tier: 4 },
 
   // Tier 5

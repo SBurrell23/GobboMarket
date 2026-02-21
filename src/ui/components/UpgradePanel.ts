@@ -12,7 +12,7 @@ import { getTierInfo, getAllTiers } from '../../market/MarketTier.js';
 import { attachHoverSound } from '../../audio/attachHoverSound.js';
 import { soundManager } from '../../audio/SoundManager.js';
 
-export type PanelMode = 'upgrades' | 'progress';
+export type PanelMode = 'upgrades' | 'progress' | 'milestones';
 
 export class UpgradePanel {
   private el: HTMLElement;
@@ -42,16 +42,17 @@ export class UpgradePanel {
       this.el.appendChild(cols);
       this.renderUpgrades(cols);
       this.renderRecipes(cols);
+    } else if (this.mode === 'milestones') {
+      const container = document.createElement('div');
+      container.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+      this.el.appendChild(container);
+      this.renderMilestones(container);
     } else {
       this.renderStatus();
-      const cols = document.createElement('div');
-      cols.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px;';
-      this.el.appendChild(cols);
-      this.renderTierProgress(cols);
-      const rightCol = document.createElement('div');
-      rightCol.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-      cols.appendChild(rightCol);
-      this.renderMilestones(rightCol);
+      const stack = document.createElement('div');
+      stack.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+      this.el.appendChild(stack);
+      this.renderTierProgress(stack);
       this.renderResetButton();
     }
   }
@@ -359,26 +360,50 @@ export class UpgradePanel {
     panel.innerHTML = `<div class="panel-header"><h3>🏆 Milestones (${completed.length}/${all.length})</h3></div>`;
 
     const grid = document.createElement('div');
-    grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;';
+    grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; align-items: stretch;';
 
     for (const m of all) {
       const done = completed.some(c => c.id === m.id);
-      const card = document.createElement('div');
-      card.style.cssText = `
-        display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
-        font-size: 0.85rem; opacity: ${done ? '1' : '0.4'};
-        background: ${done ? 'var(--parchment-light)' : 'transparent'};
-        border: 1px solid ${done ? 'var(--gold-dim)' : 'var(--parchment-lighter)'};
-        border-radius: 4px;
-      `;
-      card.innerHTML = `
-        <span style="flex-shrink: 0; font-size: 1.1rem; line-height: 1.2;">${done ? m.icon : '🔒'}</span>
-        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
-          <span style="color: ${done ? 'var(--gold)' : 'var(--ink-dim)'}; font-family: var(--font-display); font-size: 0.85rem;">${m.name}</span>
-          <span style="color: var(--ink-dim); font-size: 0.72rem; line-height: 1.3;">${m.description}</span>
-        </div>
-      `;
-      grid.appendChild(card);
+
+      if (m.id === 'max_coins') {
+        const tycoonWrapper = document.createElement('div');
+        tycoonWrapper.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: center; padding: 12px 0;';
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px;
+          font-size: 1rem; opacity: ${done ? '1' : '0.4'};
+          background: ${done ? 'var(--parchment-light)' : 'transparent'};
+          border: 2px solid ${done ? 'var(--gold-dim)' : 'var(--parchment-lighter)'};
+          border-radius: 6px;
+          max-width: 360px;
+        `;
+        card.innerHTML = `
+          <span style="flex-shrink: 0; font-size: 1.8rem; line-height: 1.2;">${done ? m.icon : '🔒'}</span>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+            <span style="color: ${done ? 'var(--gold)' : 'var(--ink-dim)'}; font-family: var(--font-display); font-size: 1.1rem;">${m.name}</span>
+            <span style="color: var(--ink-dim); font-size: 0.85rem; line-height: 1.3;">${m.description}</span>
+          </div>
+        `;
+        tycoonWrapper.appendChild(card);
+        grid.appendChild(tycoonWrapper);
+      } else {
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+          font-size: 0.85rem; opacity: ${done ? '1' : '0.4'};
+          background: ${done ? 'var(--parchment-light)' : 'transparent'};
+          border: 1px solid ${done ? 'var(--gold-dim)' : 'var(--parchment-lighter)'};
+          border-radius: 4px;
+        `;
+        card.innerHTML = `
+          <span style="flex-shrink: 0; font-size: 1.1rem; line-height: 1.2;">${done ? m.icon : '🔒'}</span>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+            <span style="color: ${done ? 'var(--gold)' : 'var(--ink-dim)'}; font-family: var(--font-display); font-size: 0.85rem;">${m.name}</span>
+            <span style="color: var(--ink-dim); font-size: 0.72rem; line-height: 1.3;">${m.description}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
     }
 
     panel.appendChild(grid);

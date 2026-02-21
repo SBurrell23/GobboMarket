@@ -101,7 +101,7 @@ export class ForgeGame implements Minigame {
   private doStrike(): void {
     if (!this.waitingForStrike || !this.running) return;
     this.waitingForStrike = false;
-    soundManager.play('forge_strike');
+    soundManager.play('forge_strike', { volume: .9 });
 
     const distance = Math.abs(this.meterPosition - this.sweetSpotCenter);
     const halfGreen = this.sweetSpotWidth / 2;
@@ -139,11 +139,18 @@ export class ForgeGame implements Minigame {
     this.running = false;
     const avgScore = this.strikes.reduce((a, b) => a + b, 0) / this.strikes.length;
     const quality = avgScore >= 0.85 ? 4 : avgScore >= 0.7 ? 3 : avgScore >= 0.4 ? 2 : avgScore >= 0.15 ? 1 : 0;
+    if (quality >= 4) soundManager.play('reaction_masterwork');
+    else if (quality >= 3) soundManager.play('reaction_superior');
+    else if (quality >= 2) soundManager.play('reaction_fine');
+    else if (quality >= 1) soundManager.play('reaction_passable');
+    else soundManager.play('reaction_shoddy');
+    const combinedScore = this.strikes.reduce((sum, acc) => sum + Math.round(acc * 100), 0);
     const result: MinigameResult = {
       score: Math.round(avgScore * 100),
       quality,
       multiplier: 1,
       completed: true,
+      forgeCombinedScore: combinedScore,
     };
     if (this.onComplete) this.onComplete(result);
   }

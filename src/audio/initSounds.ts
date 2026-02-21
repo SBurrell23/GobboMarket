@@ -1,4 +1,5 @@
 import { eventBus } from '../core/EventBus.js';
+import { gameState } from '../core/GameState.js';
 import { soundManager } from './SoundManager.js';
 
 let currentScreen = 'market';
@@ -20,7 +21,6 @@ export function initSounds(): void {
     if (type === 'runecraft') soundManager.play('enchant_open');
   });
   eventBus.on('minigame:completed', ({ type, score }) => {
-    if (type === 'forge') soundManager.play('craft_complete');
     if (type === 'runecraft' && score > 0) soundManager.play('enchant_complete');
   });
   eventBus.on('milestone:reached', () => soundManager.play('milestone'));
@@ -30,6 +30,9 @@ export function initSounds(): void {
   eventBus.on('screen:changed', () => soundManager.play('tab_click'));
   eventBus.on('cooldown:ready', () => soundManager.play('cooldown_ready'));
   eventBus.on('item:bought', () => soundManager.play('good_bought'));
+  eventBus.on('music:track_started', ({ filename }) => {
+    gameState.recordSongHeard(filename);
+  });
 }
 
 export { soundManager };

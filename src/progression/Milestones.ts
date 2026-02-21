@@ -1,5 +1,6 @@
 import { gameState } from '../core/GameState.js';
-import { MAX_COINS, TIER_NAMES } from '../core/constants.js';
+import { MAX_COINS, MUSIC_TRACK_NAMES, TIER_NAMES } from '../core/constants.js';
+import { RECIPES } from './Recipes.js';
 
 export interface MilestoneDefinition {
   id: string;
@@ -79,6 +80,104 @@ export const MILESTONES: MilestoneDefinition[] = [
     description: 'Earn 100,000 gold total.',
     icon: '💰',
     check: () => gameState.data.totalEarned >= 100000,
+  },
+  {
+    id: 'masterwork_collector',
+    name: 'Masterwork Collector',
+    description: 'Craft or buy 23 masterwork items.',
+    icon: '✨',
+    check: () => (gameState.data.craftsByQuality?.[4] ?? 0) >= 23,
+  },
+  {
+    id: 'spacious_stall',
+    name: 'Spacious Stall',
+    description: 'Reach 15 stall slots.',
+    icon: '🏪',
+    check: () => gameState.stallSlots >= 15,
+  },
+  {
+    id: 'unlucky_underdog',
+    name: 'Unlucky!',
+    description: 'Lose a haggle when the customer rolled 5 or less.',
+    icon: '😅',
+    check: () => gameState.data.lostHaggleWithCustomerRoll5OrLess === true,
+  },
+  {
+    id: 'strong_fingers',
+    name: 'Strong Fingers',
+    description: 'Buy an item with a reaction time of 175ms or less.',
+    icon: '⚡',
+    check: () => gameState.data.boughtWithReaction175OrLess === true,
+  },
+  {
+    id: 'elven_steel',
+    name: 'Elven Steel',
+    description: 'Forge an item with a combined score of 198 or higher.',
+    icon: '⚔️',
+    check: () => gameState.data.forgedElvenSteel === true,
+  },
+  {
+    id: 'rune_master',
+    name: 'Rune Master',
+    description: 'Perfect an enchant (9/9).',
+    icon: '🔮',
+    check: () => gameState.data.enchantedPerfectly === true,
+  },
+  {
+    id: 'lucky_bust',
+    name: 'That Stings!',
+    description: 'Bust a haggle with a price multiplier of 0.69 or less.',
+    icon: '🎲',
+    check: () => gameState.data.bustedWithMultiplier069OrLess === true,
+  },
+  {
+    id: 'legendary_deal',
+    name: 'Well Known',
+    description: 'Sell a masterwork, perfectly enchanted, desired item and win the haggle.',
+    icon: '👑',
+    check: () => gameState.data.perfectReputationSell === true,
+  },
+  {
+    id: 'lightning_reflexes',
+    name: 'Slow Hands',
+    description: "Max out the Auctioneer's Reflex upgrade.",
+    icon: '⚡',
+    check: () => gameState.getUpgradeRank('auctioneers_reflex') >= 4,
+  },
+  {
+    id: 'infinity_to_wizard',
+    name: "He Doesn't Want That",
+    description: 'Sell an Infinity Gem to a wizard.',
+    icon: '💠',
+    check: () => gameState.data.soldInfinityGemToWizard === true,
+  },
+  {
+    id: 'waybread_merchant',
+    name: 'Lembas',
+    description: 'Sell 9 Elven Waybread to halflings.',
+    icon: '🍞',
+    check: () => (gameState.data.waybreadSoldToHalfling ?? 0) >= 9,
+  },
+  {
+    id: 'garbage_heap',
+    name: 'Garbage Heap',
+    description: 'Obtain 50 shoddy items.',
+    icon: '🗑️',
+    check: () => (gameState.data.craftsByQuality?.[0] ?? 0) >= 50,
+  },
+  {
+    id: 'all_recipes',
+    name: 'Recipe Collector',
+    description: 'Buy all recipes in the game.',
+    icon: '📜',
+    check: () => RECIPES.every(r => gameState.hasRecipe(r.id)),
+  },
+  {
+    id: 'music_lover',
+    name: 'Audiophile',
+    description: 'Listen to every song.',
+    icon: '🎵',
+    check: () => MUSIC_TRACK_NAMES.every(name => (gameState.data.songsHeard ?? []).includes(name)),
   },
   ...TIER_NAMES.slice(1).map((name, i) => ({
     id: `tier_${i + 1}`,

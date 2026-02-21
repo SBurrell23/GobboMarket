@@ -101,6 +101,7 @@ function startGame(app: HTMLElement): void {
     { name: 'market', label: '🏪 Market' },
     { name: 'upgrades', label: '⬆️ Upgrades & Recipes' },
     { name: 'progress', label: '📈 Progress' },
+    { name: 'milestones', label: '🏆 Milestones' },
     { name: 'help', label: '❓ Help' },
   ];
 
@@ -138,6 +139,12 @@ function startGame(app: HTMLElement): void {
   progressScreen.style.cssText = 'padding: 0 12px; max-width: 1100px; margin: 0 auto; overflow-y: auto; height: 100%;';
   new UpgradePanel(progressScreen, 'progress');
   screenManager.register('progress', progressScreen);
+
+  // Milestones screen
+  const milestonesScreen = document.createElement('div');
+  milestonesScreen.style.cssText = 'padding: 0 12px; max-width: 1100px; margin: 0 auto; overflow-y: auto; height: 100%;';
+  new UpgradePanel(milestonesScreen, 'milestones');
+  screenManager.register('milestones', milestonesScreen);
 
   // Help screen
   const helpScreen = document.createElement('div');
@@ -377,7 +384,7 @@ function buildHelpContent(): string {
         <div class="panel help-card-span-2">
           <div class="panel-header"><h3>📦 Buy Goods</h3></div>
           <p style="color: var(--ink-dim);">
-            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Buy Goods minigame</strong> — wait for "Buy!" to appear (1-6 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
+            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Buy Goods minigame</strong> — wait for "Buy!" to appear, then click or press Space as fast as you can. The faster your reaction, the higher the item quality. Higher tier items can have longer wait times before "Buy!" appears.
           </p>
         </div>
 
