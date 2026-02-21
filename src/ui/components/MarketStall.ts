@@ -272,7 +272,7 @@ export class MarketStall {
     panel.appendChild(headerArea);
 
     const scrollWrap = document.createElement('div');
-    scrollWrap.className = 'stall-scroll';
+    scrollWrap.className = gameState.inventory.length === 0 ? 'stall-scroll stall-scroll--empty' : 'stall-scroll';
 
     const grid = document.createElement('div');
     grid.className = `goods-grid goods-grid--stall${!this.hasAnimatedEntrance ? ' anim-entrance' : ''}`;
