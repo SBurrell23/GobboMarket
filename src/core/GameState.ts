@@ -19,6 +19,8 @@ export interface InventoryItem {
 
 export interface GameStateData {
   coins: number;
+  /** Once true, stays true even if coins drop below MAX_COINS (Goblin Tycoon achievement persists) */
+  hasEverReachedMaxCoins?: boolean;
   raceReputation: Record<string, number>;
   currentTier: number;
   inventory: InventoryItem[];
@@ -99,12 +101,13 @@ class GameState {
   }
 
   get hasMaxCoins(): boolean {
-    return this.state.coins >= MAX_COINS;
+    return this.state.hasEverReachedMaxCoins === true || this.state.coins >= MAX_COINS;
   }
 
   addCoins(amount: number, source: string): void {
     if (amount <= 0) return;
     this.state.coins += amount;
+    if (this.state.coins >= MAX_COINS) this.state.hasEverReachedMaxCoins = true;
     this.state.totalEarned += amount;
     eventBus.emit('coins:earned', { amount, source });
     eventBus.emit('coins:changed', { amount, total: this.state.coins });
@@ -329,6 +332,7 @@ class GameState {
         upgradeRanks,
         craftsByQuality: parsed.craftsByQuality ?? base.craftsByQuality,
       };
+      if (this.state.coins >= MAX_COINS) this.state.hasEverReachedMaxCoins = true;
       return true;
     } catch {
       return false;
