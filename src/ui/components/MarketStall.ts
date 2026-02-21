@@ -276,7 +276,6 @@ export class MarketStall {
 
         const qualityLabel = QUALITY_LABELS[Math.min(item.quality, QUALITY_LABELS.length - 1)];
         const isDesired = cust ? cust.desiredCategory === goods.category : false;
-        const isRefused = cust ? cust.refusedCategory === goods.category : false;
         const card = document.createElement('div');
         card.className = `goods-card${item.enchanted ? ' goods-card--enchanted' : ''}${cust ? ' goods-card--sellable' : ''}`;
 
@@ -285,11 +284,9 @@ export class MarketStall {
           const priceCalc = calculateSellPrice(item, cust);
           const prefTag = isDesired
             ? '<div style="color: var(--green-bright, #4ade80); font-size: 0.75rem;">★ Desired</div>'
-            : isRefused
-            ? '<div style="color: var(--accent-bright); font-size: 0.75rem;">✕ Refused</div>'
-            : '<div style="color: var(--ink-dim); font-size: 0.75rem;">— Neutral</div>';
+            : '<div style="color: var(--ink-dim); font-size: 0.75rem;">Neutral</div>';
           priceHtml = `
-            <div class="goods-card__price" style="color: ${isRefused ? 'var(--accent-bright)' : 'var(--gold)'};">~${priceCalc.finalPrice} 🪙</div>
+            <div class="goods-card__price" style="color: var(--gold);">~${priceCalc.finalPrice} 🪙</div>
             ${prefTag}
           `;
         }
@@ -312,9 +309,6 @@ export class MarketStall {
         if (cust) {
           if (isDesired) {
             card.style.border = '2px solid var(--green-bright, #4ade80)';
-          } else if (isRefused) {
-            card.style.border = '2px solid var(--accent-bright)';
-            card.style.opacity = '0.75';
           }
           card.addEventListener('click', () => {
             this.doHaggle(cust, item);
@@ -335,9 +329,7 @@ export class MarketStall {
 
         card.addEventListener('mouseenter', () => {
           const categoryLabel = goods.category.replace(/s$/, '').toUpperCase();
-          const prefTip = isDesired ? '<span style="color: var(--green-bright, #4ade80);">★ Desired item!</span><br>'
-            : isRefused ? '<span style="color: var(--accent-bright);">✕ Refused — pays much less</span><br>'
-            : '';
+          const prefTip = isDesired ? '<span style="color: var(--green-bright, #4ade80);">★ Desired item!</span><br>' : '';
           const enchantLine = item.enchanted ? `<span style="color: var(--enchanted-pink)">Enchanted: x${item.enchantMultiplier.toFixed(1)} ✨</span><br>` : '';
           const tooltipText = cust
             ? `<strong style="color: var(--gold)">${goods.name}</strong><br><span style="color: var(--gold-dim); font-size: 0.85rem;">${categoryLabel}</span><br>${enchantLine}${prefTip}Click to sell to ${cust.name}`
@@ -607,7 +599,9 @@ export class MarketStall {
 
     this.minigameContainer.innerHTML = `<h2 class="minigame-container__title">🎲 Haggling with ${customer.icon} ${customer.name}</h2><div id="haggle-area"></div>`;
 
-    const haggle = new HaggleGame(customer, item.quality);
+    const goods = getGoodsById(item.goodsId);
+    const isDesired = goods ? customer.desiredCategory === goods.category : false;
+    const haggle = new HaggleGame(customer, item.quality, isDesired);
     haggle.onComplete = (result) => {
       haggle.destroy();
       eventBus.emit('minigame:completed', { type: 'haggle', score: result.score });
@@ -629,7 +623,7 @@ export class MarketStall {
       this.renderStall();
       this.renderCustomers();
       this.showSaleToast(priceCalc.finalPrice);
-      awardReputation(item.quality, result.haggleOutcome ?? 'settle', customer.type);
+      awardReputation(item.quality, result.haggleOutcome ?? 'settle', customer.type, isDesired);
       this.showNewMilestones();
     };
 

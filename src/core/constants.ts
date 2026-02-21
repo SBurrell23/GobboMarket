@@ -48,7 +48,7 @@ export const CUSTOMER_ICONS: Record<string, string> = {
   elf: '🧝',
   dwarf: '⛏️',
   orc: '👹',
-  halfling: '🧒',
+  halfling: '🍀',
   noble: '👑',
   wizard: '🧙',
 };
@@ -105,7 +105,8 @@ export const STALL_BASE_SLOTS = 5;
 export const STALL_SLOT_UPGRADE_COST_BASE = 100;
 export const STALL_SLOT_UPGRADE_COST_MULT = 2.5;
 
-export const REPUTATION_PER_SALE_BASE = 8;
+export const REPUTATION_PER_SALE_BASE = 5;
+export const REPUTATION_DESIRED_BONUS = 3;
 /** Reputation bonus by quality: Shoddy 0, Passable 0, Fine 3, Superior 5, Masterwork 10 */
 export const REPUTATION_QUALITY_BONUSES = [0, 0, 3, 5, 10] as const;
 export const REPUTATION_HAGGLE_WIN_BONUS = 5;

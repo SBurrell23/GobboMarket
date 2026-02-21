@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { calculateReputationGain, getReputationLevel } from '../../progression/Reputation.js';
 import { gameState } from '../../core/GameState.js';
 import { eventBus } from '../../core/EventBus.js';
-import { REPUTATION_PER_SALE_BASE, REPUTATION_QUALITY_BONUSES, REPUTATION_HAGGLE_WIN_BONUS, REPUTATION_HAGGLE_SETTLE_BONUS, REPUTATION_HAGGLE_BUST_PENALTY } from '../../core/constants.js';
+import { REPUTATION_PER_SALE_BASE, REPUTATION_DESIRED_BONUS, REPUTATION_QUALITY_BONUSES, REPUTATION_HAGGLE_WIN_BONUS, REPUTATION_HAGGLE_SETTLE_BONUS, REPUTATION_HAGGLE_BUST_PENALTY } from '../../core/constants.js';
 
 describe('Reputation', () => {
   beforeEach(() => {
@@ -35,6 +35,12 @@ describe('Reputation', () => {
   it('should calculate quality bonus correctly', () => {
     const rep = calculateReputationGain(4, 'settle');
     expect(rep).toBe(REPUTATION_PER_SALE_BASE + REPUTATION_QUALITY_BONUSES[4] + REPUTATION_HAGGLE_SETTLE_BONUS);
+  });
+
+  it('should add bonus for desired item', () => {
+    const normalRep = calculateReputationGain(1, 'settle');
+    const desiredRep = calculateReputationGain(1, 'settle', true);
+    expect(desiredRep).toBe(normalRep + REPUTATION_DESIRED_BONUS);
   });
 
   it('should apply bust penalty', () => {

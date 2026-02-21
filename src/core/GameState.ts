@@ -253,14 +253,11 @@ class GameState {
     if (!goods) return 0;
     let duration = goods.cooldown;
 
-    if (this.getUpgradeRank('quick_hands') > 0 && goods.tier >= 1 && goods.tier <= 2) {
-      duration *= 1 - this.getUpgradeRank('quick_hands') * 0.06;
-    }
     if (this.getUpgradeRank('efficient_workshop') > 0 && goods.craftable) {
-      duration *= 1 - this.getUpgradeRank('efficient_workshop') * 0.08;
+      duration *= 1 - this.getUpgradeRank('efficient_workshop') * 0.10;
     }
     if (this.getUpgradeRank('supply_chain') > 0 && !goods.craftable) {
-      duration *= 1 - this.getUpgradeRank('supply_chain') * 0.07;
+      duration *= 1 - this.getUpgradeRank('supply_chain') * 0.10;
     }
     if (this.getUpgradeRank('master_supplier') > 0) {
       duration *= 1 - this.getUpgradeRank('master_supplier') * 0.10;
@@ -315,10 +312,22 @@ class GameState {
         delete parsed.upgrades;
       }
       const base = createDefaultState();
+      let upgradeRanks = parsed.upgradeRanks ?? base.upgradeRanks;
+      // Migrate quick_hands -> reputation_boost
+      if (upgradeRanks['quick_hands']) {
+        upgradeRanks = { ...upgradeRanks };
+        upgradeRanks['reputation_boost'] = upgradeRanks['quick_hands'];
+        delete upgradeRanks['quick_hands'];
+      }
+      // Remove deprecated merchant_guild (upgrade removed)
+      if (upgradeRanks['merchant_guild']) {
+        upgradeRanks = { ...upgradeRanks };
+        delete upgradeRanks['merchant_guild'];
+      }
       this.state = {
         ...base,
         ...parsed,
-        upgradeRanks: parsed.upgradeRanks ?? base.upgradeRanks,
+        upgradeRanks,
         craftsByQuality: parsed.craftsByQuality ?? base.craftsByQuality,
       };
       return true;

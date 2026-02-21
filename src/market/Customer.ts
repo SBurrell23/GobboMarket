@@ -18,7 +18,6 @@ export interface Customer {
   name: string;
   icon: string;
   desiredCategory: GoodsDefinition['category'];
-  refusedCategory: GoodsDefinition['category'];
   patience: number;
   haggleTier: HaggleTier;
   budgetMultiplier: number;
@@ -44,7 +43,7 @@ const CATEGORY_PREFERENCES: Record<string, GoodsDefinition['category'][]> = {
   orc: ['weapon', 'food', 'armor'],
   halfling: ['food', 'potion', 'trinket'],
   noble: ['trinket', 'armor', 'potion'],
-  wizard: ['potion', 'trinket', 'material'],
+  wizard: ['potion', 'weapon', 'food'],
 };
 
 let nextId = 0;
@@ -53,22 +52,17 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const ALL_CATEGORIES: GoodsDefinition['category'][] = ['weapon', 'armor', 'potion', 'trinket', 'food', 'material'];
-
 export function createCustomer(type: typeof CUSTOMER_TYPES[number]): Customer {
   const names = NAME_POOLS[type] ?? HUMAN_NAMES;
   const prefs = CATEGORY_PREFERENCES[type] ?? ['weapon'];
   const haggleTier = CUSTOMER_HAGGLE_TIER[type] ?? 'medium';
   const desired = pickRandom(prefs);
-  const refusePool = ALL_CATEGORIES.filter(c => c !== desired);
-  const refused = pickRandom(refusePool);
   return {
     id: `customer-${nextId++}`,
     type,
     name: pickRandom(names),
     icon: CUSTOMER_ICONS[type] ?? '🧑',
     desiredCategory: desired,
-    refusedCategory: refused,
     patience: CUSTOMER_PATIENCE[type] ?? 5,
     haggleTier,
     budgetMultiplier: type === 'noble' ? 1.5 : type === 'wizard' ? 1.3 : type === 'elf' ? 1.2 : type === 'goblin' ? 0.8 : 1.0,

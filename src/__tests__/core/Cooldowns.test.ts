@@ -52,31 +52,13 @@ describe('Cooldowns', () => {
     expect(state.isOnCooldown('rat_jerky')).toBe(false);
   });
 
-  it('should apply quick_hands reduction for tier 1-2 items', () => {
-    const now = Date.now();
-    vi.spyOn(Date, 'now').mockReturnValue(now);
-
-    state.addUpgradeRank('quick_hands');
-    state.startCooldown('elven_bow', 135); // tier 2, 135 * (1 - 0.06) = 126.9 -> 127
-    expect(state.getCooldownRemaining('elven_bow')).toBe(127);
-  });
-
-  it('should NOT apply quick_hands to tier 0 or tier 3+ items', () => {
-    const now = Date.now();
-    vi.spyOn(Date, 'now').mockReturnValue(now);
-
-    state.addUpgradeRank('quick_hands');
-    state.startCooldown('iron_dagger', 36); // tier 0, no quick_hands
-    expect(state.getCooldownRemaining('iron_dagger')).toBe(36);
-  });
-
   it('should apply efficient_workshop reduction for craftable items', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
     state.addUpgradeRank('efficient_workshop');
-    state.startCooldown('iron_dagger', 36); // craftable, 36 * (1 - 0.08) = 33.12 -> 33
-    expect(state.getCooldownRemaining('iron_dagger')).toBe(33);
+    state.startCooldown('iron_dagger', 36); // craftable, 36 * (1 - 0.10) = 32.4 -> 32
+    expect(state.getCooldownRemaining('iron_dagger')).toBe(32);
   });
 
   it('should apply supply_chain reduction for buyable items', () => {
@@ -84,7 +66,7 @@ describe('Cooldowns', () => {
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
     state.addUpgradeRank('supply_chain');
-    state.startCooldown('rat_jerky', 24); // not craftable, 24 * (1 - 0.07) = 22.32 -> 22
+    state.startCooldown('rat_jerky', 24); // not craftable, 24 * (1 - 0.10) = 21.6 -> 22
     expect(state.getCooldownRemaining('rat_jerky')).toBe(22);
   });
 
@@ -101,15 +83,14 @@ describe('Cooldowns', () => {
     const now = Date.now();
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
-    state.addUpgradeRank('quick_hands');
     state.addUpgradeRank('efficient_workshop');
     state.addUpgradeRank('master_supplier');
-    // elven_bow: tier 2, craftable - gets all three
-    // 135 * 0.94 * 0.92 * 0.90 = 105.1 -> 105
+    // elven_bow: tier 2, craftable - gets both
+    // 135 * 0.90 * 0.90 = 109.35 -> 109
     state.startCooldown('elven_bow', 135);
     const remaining = state.getCooldownRemaining('elven_bow');
-    expect(remaining).toBeLessThanOrEqual(106);
-    expect(remaining).toBeGreaterThanOrEqual(104);
+    expect(remaining).toBeLessThanOrEqual(110);
+    expect(remaining).toBeGreaterThanOrEqual(108);
   });
 
   it('should clean expired cooldowns', () => {

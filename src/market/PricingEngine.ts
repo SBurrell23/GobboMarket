@@ -24,9 +24,7 @@ export function calculateSellPrice(
   const enchantMult = item.enchanted ? item.enchantMultiplier : 1.0;
 
   const categoryBonus = goods
-    ? (customer.desiredCategory === goods.category ? 1.35
-      : customer.refusedCategory === goods.category ? 0.5
-      : 1.0)
+    ? (customer.desiredCategory === goods.category ? 1.35 : 1.0)
     : 1.0;
   const budgetMult = customer.budgetMultiplier;
 
@@ -52,8 +50,7 @@ export function calculateBuyPrice(goodsId: string, tier: number): number {
   const goods = getGoodsById(goodsId);
   if (!goods) return 0;
   const tierDiscount = 1 - tier * 0.03;
-  const guildDiscount = 1 - gameState.getUpgradeRank('merchant_guild') * 0.08;
-  return Math.max(1, Math.round(goods.materialCost * tierDiscount * guildDiscount));
+  return Math.max(1, Math.round(goods.materialCost * tierDiscount));
 }
 
 export function estimateValue(item: InventoryItem): number {

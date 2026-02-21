@@ -22,7 +22,6 @@ function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     name: 'Test',
     icon: '🧑',
     desiredCategory: 'weapon',
-    refusedCategory: 'food',
     patience: 5,
     haggleTier: 'medium',
     budgetMultiplier: 1.0,
@@ -52,20 +51,6 @@ describe('PricingEngine', () => {
       expect(matching.categoryBonus).toBe(1.35);
       expect(nonMatching.categoryBonus).toBe(1.0);
       expect(matching.finalPrice).toBeGreaterThan(nonMatching.finalPrice);
-    });
-
-    it('should apply refused penalty when customer refuses that category', () => {
-      const refused = calculateSellPrice(
-        makeItem(),
-        makeCustomer({ desiredCategory: 'food', refusedCategory: 'weapon' })
-      );
-      const neutral = calculateSellPrice(
-        makeItem(),
-        makeCustomer({ desiredCategory: 'food', refusedCategory: 'trinket' })
-      );
-      expect(refused.categoryBonus).toBe(0.5);
-      expect(neutral.categoryBonus).toBe(1.0);
-      expect(refused.finalPrice).toBeLessThan(neutral.finalPrice);
     });
 
     it('should apply enchant multiplier', () => {

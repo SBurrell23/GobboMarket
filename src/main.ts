@@ -225,17 +225,18 @@ const RACES_HELP: { icon: string; name: string; prefs: string[]; haggle: string;
   { icon: '👹', name: 'Orc', prefs: ['weapon', 'food', 'armor'], haggle: 'Poor', budget: '1x' },
   { icon: '🧒', name: 'Halfling', prefs: ['food', 'potion', 'trinket'], haggle: 'Medium', budget: '1x' },
   { icon: '👑', name: 'Noble', prefs: ['trinket', 'armor', 'potion'], haggle: 'Medium', budget: '1.5x' },
-  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'trinket', 'material'], haggle: 'Tough', budget: '1.3x' },
+  { icon: '🧙', name: 'Wizard', prefs: ['potion', 'weapon', 'food'], haggle: 'Tough', budget: '1.3x' },
 ];
 
 function buildHelpContent(): string {
   const racesRows = RACES_HELP.map((r, i) => {
     const type = ['goblin', 'human', 'elf', 'dwarf', 'orc', 'halfling', 'noble', 'wizard'][i] as keyof typeof CUSTOMER_TIER_UNLOCK;
+    const icon = CUSTOMER_ICONS[type] ?? r.icon;
     const tierIdx = CUSTOMER_TIER_UNLOCK[type] ?? 0;
     const tierName = TIER_NAMES[tierIdx] ?? 'Unknown';
     const prefsStr = r.prefs.map(c => CATEGORY_PLURAL[c] ?? c.toUpperCase()).join(', ');
     const cell = 'style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;"';
-    return `<tr><td ${cell}>${r.icon} ${r.name}</td><td ${cell}>${prefsStr}</td><td ${cell}>${tierName}</td><td ${cell}>${r.haggle}</td><td ${cell}>${r.budget}</td></tr>`;
+    return `<tr><td ${cell}>${icon} ${r.name}</td><td ${cell}>${prefsStr}</td><td ${cell}>${tierName}</td><td ${cell}>${r.haggle}</td><td ${cell}>${r.budget}</td></tr>`;
   }).join('');
 
   return `
@@ -253,7 +254,7 @@ function buildHelpContent(): string {
         <div class="panel help-card-span-4">
           <div class="panel-header"><h3>👥 Races</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 12px; font-size: 0.88rem;">
-            Each race prefers certain item categories and has unique traits. Desired items pay +35%, refused items pay 50%.
+            Each race prefers certain item categories and has unique traits. <strong style="color: var(--gold);">WANTED</strong> item types pay +35%.
           </p>
           <table style="border-collapse: collapse; width: 100%; font-size: 0.82rem;">
             <thead>
@@ -317,9 +318,9 @@ function buildHelpContent(): string {
               <tr><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">Bust (roll 1)</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">0.65x–0.85x</td><td style="border: 1px solid var(--parchment-lighter); padding: 6px 8px;">-1</td></tr>
             </tbody>
           </table>
-          <p style="color: var(--ink-dim); font-size: 0.88rem;">
-            Desired item +35% price. Refused item -50%. Noble pays 1.5x, Wizard 1.3x, Elf 1.2x, Goblin 0.8x.
-          </p>
+          <ul style="color: var(--ink-dim); font-size: 0.88rem; margin: 0; padding-left: 20px;">
+            <li>Items that customers  <strong style="color: var(--gold);">WANT</strong> (Desired) sell for +35%</li>
+          </ul>
         </div>
 
         <div class="panel help-card-span-4">
@@ -352,25 +353,25 @@ function buildHelpContent(): string {
         <div class="panel help-card-span-2">
           <div class="panel-header"><h3>📜 Reputation</h3></div>
           <p style="color: var(--ink-dim); margin-bottom: 8px; font-size: 0.88rem;">Ways to earn reputation:</p>
-          <ul style="color: var(--ink-dim); font-size: 0.88rem; margin: 0 0 8px 0; display: flex; flex-direction: column; gap: 4px;">
-            <li>Base 8 reputation per sale</li>
+          <ul style="color: var(--ink-dim); font-size: 0.88rem; margin: 0; display: flex; flex-direction: column; gap: 4px;">
+            <li>Base 5 reputation per sale</li>
+            <li>+3 if the customer wants that item type</li>
             <li>Fine +3, Superior +5, Masterwork +10</li>
             <li>+5 for winning the haggle, +1 for settling, -1 for busting</li>
           </ul>
-          <p style="color: var(--ink-dim); font-size: 0.88rem;">Reputation is tracked per race. Each market tier requires minimum reputation with specific races to unlock.</p>
         </div>
 
         <div class="panel help-card-span-2">
           <div class="panel-header"><h3>📦 Buy Goods</h3></div>
           <p style="color: var(--ink-dim);">
-            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Reaction Time minigame</strong> — wait for "Buy!" to appear (1-6 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
+            On the Market tab, browse available goods and click one to buy it. Buying triggers the <strong style="color: var(--gold);">Buy Goods minigame</strong> — wait for "Buy!" to appear (1-6 seconds), then click or press Space as fast as you can. The faster your reaction, the higher the item quality.
           </p>
         </div>
 
         <div class="panel help-card-span-2">
           <div class="panel-header"><h3>⚒️ Crafting Items</h3></div>
           <p style="color: var(--ink-dim);">
-            Once you unlock recipes (on the Upgrades tab), you can craft items. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster! Higher tier items are harder to craft — the forge has a smaller sweet spot and a faster-moving bar.
+            You start with a few crafting recipes. Crafting triggers the <strong style="color: var(--gold);">Forge minigame</strong> — time your clicks when the moving bar is in the golden sweet spot. Better timing means higher quality. Each strike gets faster! Higher tier items are harder to craft — the forge has a smaller sweet spot and a faster-moving bar. You can buy more recipes from the Recipes list on the Upgrades tab.
           </p>
         </div>
 
@@ -378,22 +379,21 @@ function buildHelpContent(): string {
           <div class="panel-header"><h3>📈 Progression</h3></div>
           <ul style="color: var(--ink-dim); margin: 0; display: flex; flex-direction: column; gap: 6px;">
             <li>Higher tier items will sell for significantly more coins</li>
-            <li>Reputation gains are NOT tied to the tier of an item. A T1 and T8 item both give the same base reputation when sold.</li>
-            <li>Both coins and reputation are needed to unlock higher market tiers</li>
-            <li>Check the Upgrades tab for upgrades and recipes. Check the Progress tab for tier requirements and milestones</li>
+            <li>Buy upgrades and recipes to increase your profits</li>
+            <li>Both coins AND reputation are needed to unlock higher markets</li>
+            <li>Reputation is not tied to item tier</li>
           </ul>
         </div>
 
       <div class="panel help-card-span-8">
         <div class="panel-header"><h3>💡 Tips</h3></div>
         <ul style="color: var(--ink-dim); display: flex; flex-direction: column; gap: 6px;">
-          <li>Buy early-game upgrades as soon as you can — they compound quickly.</li>
-          <li>Higher quality items sell for more, so practice the forge timing.</li>
-          <li>Enchanting an item before selling it can dramatically boost its price.</li>
-          <li>Don't be greedy in the haggle — settling for a medium deal beats busting!</li>
+          <li>Your highest tier items will be the most profitable. Craft them well and enchant them!</li>
+          <li>All items tiers reward the same base reputation, so use lower tier items to build reputation while your high tier items are on cooldown!</li>
+          <li>Choose your customers wisely to make the most profit off your highest value items!</li>
+          <li>Don't be greedy in the haggle — settling early for a medium deal beats busting!</li>
           <li>Customers leave if you take too long, so serve them before they walk away.</li>
-          <li>Craft items when you can — crafted goods are free to make (you just need the recipe and materials cost).</li>
-          <li>Keep an eye on which categories customers want and stock up accordingly.</li>
+          <li>Enchanting only effects the sell price, it might not be worth the time if you are selling soley for reputation.</li>
         </ul>
       </div>
     </div>

@@ -16,10 +16,12 @@ export class HaggleGame implements Minigame {
   private playerRolls: number[] = [];
   private phase: 'customer-roll' | 'player-turn' | 'result' = 'customer-roll';
   private outcome: 'win' | 'bust' | 'settle' | null = null;
+  private isDesiredItem: boolean;
 
-  constructor(customer: Customer, itemQuality: number = 2) {
+  constructor(customer: Customer, itemQuality: number = 2, isDesiredItem = false) {
     this.customer = customer;
     this.itemQuality = itemQuality;
+    this.isDesiredItem = isDesiredItem;
   }
 
   start(container: HTMLElement): void {
@@ -197,7 +199,7 @@ export class HaggleGame implements Minigame {
       </p>
 
       <p style="color: var(--green-bright, #4ade80); font-size: 0.9rem; margin-bottom: 20px;">
-        ⭐${calculateReputationGain(this.itemQuality, this.outcome!) >= 0 ? '+' : ''}${calculateReputationGain(this.itemQuality, this.outcome!)} ${this.customer.type.charAt(0).toUpperCase() + this.customer.type.slice(1)} Reputation
+        ⭐${calculateReputationGain(this.itemQuality, this.outcome!, this.isDesiredItem) >= 0 ? '+' : ''}${calculateReputationGain(this.itemQuality, this.outcome!, this.isDesiredItem)} ${this.customer.type.charAt(0).toUpperCase() + this.customer.type.slice(1)} Reputation
       </p>
 
       <button class="btn btn-gold done-btn">Accept Deal</button>

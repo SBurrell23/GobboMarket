@@ -9,7 +9,6 @@ function makeCustomer(): Customer {
     name: 'Test Human',
     icon: '🧑',
     desiredCategory: 'weapon',
-    refusedCategory: 'food',
     patience: 5,
     haggleTier: 'medium',
     budgetMultiplier: 1.0,

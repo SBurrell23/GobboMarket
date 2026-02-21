@@ -83,12 +83,12 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   },
   // Tier 3 (Trader's Row)
   {
-    id: 'quick_hands',
-    name: 'Quick Hands',
-    description: '-6% cooldown on T1-2 items',
+    id: 'reputation_boost',
+    name: 'Reputation Boost',
+    description: '+1 base reputation per sale per rank',
     tier: 3,
     maxRank: 5,
-    icon: '🤲',
+    icon: '⭐',
     costForRank: (rank) => tierScaledCost(3, rank),
   },
   // Tier 4 (Merchant Quarter)
@@ -105,9 +105,9 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'supply_chain',
     name: 'Supply Chain',
-    description: '-7% cooldown on bought goods',
+    description: '-10% cooldown on bought goods per rank',
     tier: 5,
-    maxRank: 4,
+    maxRank: 5,
     icon: '📦',
     costForRank: (rank) => tierScaledCost(5, rank),
   },
@@ -124,22 +124,13 @@ export const UPGRADE_DEFINITIONS: UpgradeDefinition[] = [
   {
     id: 'efficient_workshop',
     name: 'Efficient Workshop',
-    description: '-8% cooldown on forged items',
+    description: '-10% cooldown on forged items per rank',
     tier: 6,
-    maxRank: 4,
+    maxRank: 5,
     icon: '🏭',
     costForRank: (rank) => tierScaledCost(6, rank),
   },
-  // Tier 7 (Diamond Exchange)
-  {
-    id: 'merchant_guild',
-    name: 'Merchant Guild Card',
-    description: '-8% material costs',
-    tier: 7,
-    maxRank: 4,
-    icon: '📜',
-    costForRank: (rank) => tierScaledCost(7, rank),
-  },
+  // Tier 7 (Diamond Exchange) - merchant_guild removed
   // Tier 8 (Grand Exchange)
   {
     id: 'master_supplier',
