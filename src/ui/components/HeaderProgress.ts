@@ -52,6 +52,11 @@ export class HeaderProgress {
     );
     this.container.appendChild(coinItem);
 
+    const divider = document.createElement('span');
+    divider.textContent = '|';
+    divider.style.cssText = 'color: var(--parchment-lighter); font-size: 1rem; margin: 0 4px;';
+    this.container.appendChild(divider);
+
     const raceReqs = TIER_RACE_REPUTATION_REQUIRED[nextTier] ?? {};
     for (const [race, required] of Object.entries(raceReqs)) {
       const current = gameState.getRaceReputation(race);
