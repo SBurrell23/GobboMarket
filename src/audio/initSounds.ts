@@ -5,7 +5,7 @@ let currentScreen = 'market';
 
 export function initSounds(): void {
   soundManager.loadSettings();
-  soundManager.startBackgroundMusic();
+  // Music starts on first user interaction (see main.ts onStart) - browsers block autoplay before that
 
   eventBus.on('screen:changed', ({ screen }) => { currentScreen = screen; });
   eventBus.on('customer:arrived', () => {

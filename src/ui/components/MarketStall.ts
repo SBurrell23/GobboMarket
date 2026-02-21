@@ -573,11 +573,10 @@ export class MarketStall {
       rune.destroy();
       eventBus.emit('minigame:completed', { type: 'runecraft', score: result.score });
 
-      if (result.multiplier > 1) {
-        item.enchanted = true;
-        item.enchantMultiplier = result.multiplier;
-        eventBus.emit('inventory:changed', {});
-      }
+      // Always apply enchant on completion (even x1.0 at 0/9) so user can't retry for a better roll
+      item.enchanted = true;
+      item.enchantMultiplier = result.multiplier;
+      eventBus.emit('inventory:changed', {});
 
       this.hideOverlay();
       this.render();

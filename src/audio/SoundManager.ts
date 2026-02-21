@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS: SoundSettings = {
   masterVolume: 0.7,
   musicVolume: 0.5,
   muted: false,
-  selectedTrackIndex: 0,
+  selectedTrackIndex: 5, // Art of the Craft (index in tracks.json)
 };
 
 export class SoundManager {

@@ -43,6 +43,7 @@ function boot(): void {
   // Show welcome screen; game starts after user clicks
   new WelcomeScreen(document.body, () => {
     soundManager.play('game_start');
+    soundManager.startBackgroundMusic(); // Start music on first user interaction (browsers block autoplay before that)
     // Build game and set correct tier background BEFORE fading welcome screen to avoid flash
     startGame(app);
   });
