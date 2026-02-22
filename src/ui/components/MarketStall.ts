@@ -127,6 +127,16 @@ export class MarketStall {
         anyExpired = true;
         eventBus.emit('cooldown:ready', { goodsId });
         this.cooldownGoodsIds.delete(goodsId);
+      } else {
+        // Periodically refresh overlay height - Firefox (and other browsers) may not run
+        // CSS transitions when tab is backgrounded, causing the cooldown bar to disappear
+        const overlay = this.supplierEl.querySelector(`.goods-card__cooldown-overlay[data-goods-id="${goodsId}"]`) as HTMLElement | null;
+        if (overlay) {
+          const effectiveCooldown = gameState.getEffectiveCooldown(goodsId);
+          const pct = effectiveCooldown > 0 ? Math.min(100, (remaining / effectiveCooldown) * 100) : 0;
+          overlay.style.transition = 'height 0.5s linear';
+          overlay.style.height = `${pct}%`;
+        }
       }
     }
     if (anyExpired) {
@@ -164,12 +174,10 @@ export class MarketStall {
       const pct = Math.min(100, (remaining / effectiveCooldown) * 100);
       const overlay = document.createElement('div');
       overlay.className = 'goods-card__cooldown-overlay';
+      overlay.dataset.goodsId = goods.id;
       overlay.style.height = `${pct}%`;
+      overlay.style.transition = 'height 0.5s linear';
       card.appendChild(overlay);
-      requestAnimationFrame(() => {
-        overlay.style.transition = `height ${remaining}s linear`;
-        overlay.style.height = '0%';
-      });
       this.cooldownGoodsIds.add(goods.id);
     }
 
